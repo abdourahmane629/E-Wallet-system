@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox xmlns="http://javafx.com/javafx/21" 
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.ewallet.gui.controllers.WelcomeController"
+      spacing="20" 
+      alignment="CENTER" 
+      prefWidth="600" 
+      prefHeight="500"
+      style="-fx-padding: 40; -fx-background: linear-gradient(to bottom, #3498db, #2980b9);">
+
+    <!-- Logo/Titre -->
+    <VBox spacing="10" alignment="CENTER">
+        <Label text="E-Wallet" 
+               style="-fx-font-size: 48; -fx-font-weight: bold; -fx-text-fill: white;">
+            <font>
+                <Font size="48" />
+            </font>
+        </Label>
+        <Label text="Gestion de Portefeuille Electronique" 
+               style="-fx-font-size: 16; -fx-text-fill: #ecf0f1;" />
+    </VBox>
+
+    <!-- Description -->
+    <VBox spacing="10" alignment="CENTER" style="-fx-padding: 20; -fx-background-color: rgba(255, 255, 255, 0.1); -fx-border-radius: 10;">
+        <Label text="Bienvenue dans E-Wallet" 
+               style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: white;" />
+        <Label text="Transférez de l'argent facilement et en toute sécurité" 
+               style="-fx-font-size: 12; -fx-text-fill: #ecf0f1;" />
+        <Label text="Gérez votre portefeuille numérique avec nos outils modernes" 
+               style="-fx-font-size: 12; -fx-text-fill: #ecf0f1;" />
+    </VBox>
+
+    <!-- Boutons -->
+    <HBox spacing="20" alignment="CENTER" prefHeight="60">
+        <Button fx:id="loginButton"
+                text="Se Connecter" 
+                onAction="#handleLogin"
+                style="-fx-font-size: 14; -fx-padding: 15 40 15 40; -fx-background-color: #27ae60; -fx-text-fill: white; -fx-cursor: hand; -fx-border-radius: 5;"
+                prefWidth="150"
+                prefHeight="50" />
+        
+        <Button fx:id="registerButton"
+                text="S'Inscrire" 
+                onAction="#handleRegister"
+                style="-fx-font-size: 14; -fx-padding: 15 40 15 40; -fx-background-color: #f39c12; -fx-text-fill: white; -fx-cursor: hand; -fx-border-radius: 5;"
+                prefWidth="150"
+                prefHeight="50" />
+    </HBox>
+
+    <!-- Footer -->
+    <Label text="Version 1.0 | © 2026 E-Wallet" 
+           style="-fx-font-size: 10; -fx-text-fill: #bdc3c7;" />
+
+</VBox>

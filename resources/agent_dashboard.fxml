@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21" 
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.ewallet.gui.controllers.AgentDashboardController"
+            prefWidth="1000" prefHeight="700"
+            style="-fx-background-color: #f0f9ff;"> <!-- Changé: couleur douce bleu pâle -->
+
+    <!-- TOP: Header avec couleur unie (pas de gradient CSS) -->
+    <top>
+        <VBox style="-fx-background-color: #667eea;"> <!-- Couleur unie bleu -->
+            <HBox spacing="20.0" alignment="CENTER_LEFT">
+                <padding>
+                    <Insets top="15.0" right="25.0" bottom="15.0" left="25.0"/>
+                </padding>
+                <Label text="🏪 E-Wallet Agent" 
+                       style="-fx-text-fill: white; -fx-font-size: 26px; -fx-font-weight: bold; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 3, 0.5, 1, 1);"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <VBox spacing="4" alignment="CENTER_RIGHT">
+                    <Label fx:id="welcomeLabel" 
+                           style="-fx-text-fill: rgba(255,255,255,0.9); -fx-font-size: 14px; -fx-font-weight: 500;"/>
+                    <Label fx:id="commissionsLabel" 
+                           style="-fx-text-fill: #fef08a; -fx-font-size: 14px; -fx-font-weight: bold; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 1, 0.5, 0, 0);"/>
+                    <Label fx:id="pendingCommissionsLabel" 
+                           style="-fx-text-fill: #fdba74; -fx-font-size: 12px;"/>
+                    <Label fx:id="totalCommissionsLabel" 
+                           style="-fx-text-fill: #86efac; -fx-font-size: 12px;"/>
+                </VBox>
+            </HBox>
+        </VBox>
+    </top>
+
+    <!-- LEFT: Menu -->
+    <left>
+        <VBox spacing="12.0" style="-fx-background-color: #2d3748;" prefWidth="220">
+            <padding>
+                <Insets top="25.0" right="20.0" bottom="25.0" left="20.0"/>
+            </padding>
+            
+            <Button fx:id="dashboardButton" 
+                    text="📊 Menu Agent"
+                    onAction="#handleDashboard"
+                    style="-fx-background-color: transparent; -fx-text-fill: #e2e8f0; -fx-font-size: 17px; -fx-font-weight: bold; -fx-padding: 0 0 15 0; -fx-alignment: CENTER_LEFT;"
+                    maxWidth="Infinity">
+                <padding>
+                    <Insets bottom="15.0" left="0"/>
+                </padding>
+            </Button>
+            
+            <Separator style="-fx-background-color: #718096;"/>
+            
+            <Button fx:id="depositButton" 
+                    text="💰 Dépôt Client"
+                    onAction="#handleDeposit"
+                    style="-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: 600; -fx-background-radius: 8;"
+                    maxWidth="Infinity">
+                <padding>
+                    <Insets top="14.0" right="16.0" bottom="14.0" left="16.0"/>
+                </padding>
+            </Button>
+            
+            <Button fx:id="withdrawButton" 
+                    text="🏧 Retrait Client"
+                    onAction="#handleWithdraw"
+                    style="-fx-background-color: #8b5cf6; -fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: 600; -fx-background-radius: 8;"
+                    maxWidth="Infinity">
+                <padding>
+                    <Insets top="14.0" right="16.0" bottom="14.0" left="16.0"/>
+                </padding>
+            </Button>
+            
+            <Button fx:id="operationsButton" 
+                    text="📋 Mes Opérations"
+                    onAction="#handleOperations"
+                    style="-fx-background-color: #f59e0b; -fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: 600; -fx-background-radius: 8;"
+                    maxWidth="Infinity">
+                <padding>
+                    <Insets top="14.0" right="16.0" bottom="14.0" left="16.0"/>
+                </padding>
+            </Button>
+            
+            <Button fx:id="commissionsButton" 
+                    text="💵 Mes Commissions"
+                    onAction="#handleCommissions"
+                    style="-fx-background-color: #10b981; -fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: 600; -fx-background-radius: 8;"
+                    maxWidth="Infinity">
+                <padding>
+                    <Insets top="14.0" right="16.0" bottom="14.0" left="16.0"/>
+                </padding>
+            </Button>
+
+            <Button fx:id="notificationsButton" 
+                    text="🔔 Notifications"
+                    onAction="#handleNotifications"
+                    style="-fx-background-color: #6366f1; -fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: 600; -fx-background-radius: 8;"
+                    maxWidth="Infinity">
+                <padding>
+                    <Insets top="14.0" right="16.0" bottom="14.0" left="16.0"/>
+                </padding>
+            </Button>
+
+            <Button fx:id="profileButton" 
+                    text="👤 Mon Profil"
+                    onAction="#handleProfile"
+                    style="-fx-background-color: #1abc9c; -fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: 600; -fx-background-radius: 6;"
+                    maxWidth="Infinity">
+                <padding>
+                    <Insets top="12.0" right="15.0" bottom="12.0" left="15.0"/>
+                </padding>
+            </Button>
+            
+            <Button fx:id="helpButton" 
+                    text="❓ Aide &amp; Support"
+                    onAction="#handleHelp"
+                    style="-fx-background-color: #7f8c8d; -fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: 600; -fx-background-radius: 6;"
+                    maxWidth="Infinity">
+                <padding>
+                    <Insets top="12.0" right="15.0" bottom="12.0" left="15.0"/>
+                </padding>
+            </Button>
+            
+            <Region VBox.vgrow="ALWAYS"/>
+            
+            <Button fx:id="logoutButton" 
+                    text="🚪 Déconnexion"
+                    onAction="#handleLogout"
+                    style="-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: 600; -fx-background-radius: 8;"
+                    maxWidth="Infinity">
+                <padding>
+                    <Insets top="14.0" right="16.0" bottom="14.0" left="16.0"/>
+                </padding>
+            </Button>
+        </VBox>
+    </left>
+
+    <!-- CENTER: Contenu principal -->
+    <center>
+        <VBox fx:id="mainContent" spacing="25.0" alignment="TOP_CENTER">
+            <padding>
+                <Insets top="35.0" right="35.0" bottom="35.0" left="35.0"/>
+            </padding>
+            
+            <!-- Section de bienvenue - Changé couleur de fond -->
+            <VBox spacing="20.0" alignment="CENTER" style="-fx-background-color: #f8fafc; -fx-background-radius: 16; -fx-padding: 30; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 15, 0.5, 0, 5);">
+                <Label text="Tableau de Bord Agent" 
+                       style="-fx-font-size: 32px; -fx-text-fill: #667eea; -fx-font-weight: bold;"/>
+                
+                <Label text="Bienvenue dans votre espace agent E-Wallet" 
+                       style="-fx-font-size: 16px; -fx-text-fill: #64748b;"/>
+                
+            </VBox>
+            
+            <!-- Instructions - Changé couleur de fond -->
+            <VBox spacing="15.0" style="-fx-background-color: #f8fafc; -fx-background-radius: 16; -fx-padding: 25; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 15, 0.5, 0, 5);">
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <Label text="📋" style="-fx-font-size: 24px;"/>
+                    <Label text="Instructions pour l'Agent" 
+                           style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #334155;"/>
+                </HBox>
+                
+                <GridPane hgap="20.0" vgap="12.0" style="-fx-padding: 15 0 0 0;">
+                    <columnConstraints>
+                        <ColumnConstraints prefWidth="50"/>
+                        <ColumnConstraints prefWidth="400"/>
+                    </columnConstraints>
+                    
+                    <Label text="1." GridPane.rowIndex="0" GridPane.columnIndex="0" 
+                           style="-fx-text-fill: #3b82f6; -fx-font-weight: bold; -fx-font-size: 14px;"/>
+                    <Label text="Vérifier l'identité du client (carte d'identité)" 
+                           GridPane.rowIndex="0" GridPane.columnIndex="1"
+                           style="-fx-text-fill: #475569; -fx-font-size: 14px;"/>
+                    
+                    <Label text="2." GridPane.rowIndex="1" GridPane.columnIndex="0" 
+                           style="-fx-text-fill: #8b5cf6; -fx-font-weight: bold; -fx-font-size: 14px;"/>
+                    <Label text="Demander le PIN du client pour validation" 
+                           GridPane.rowIndex="1" GridPane.columnIndex="1"
+                           style="-fx-text-fill: #475569; -fx-font-size: 14px;"/>
+                    
+                    <Label text="3." GridPane.rowIndex="2" GridPane.columnIndex="0" 
+                           style="-fx-text-fill: #10b981; -fx-font-weight: bold; -fx-font-size: 14px;"/>
+                    <Label text="Confirmer le montant avec le client" 
+                           GridPane.rowIndex="2" GridPane.columnIndex="1"
+                           style="-fx-text-fill: #475569; -fx-font-size: 14px;"/>
+                    
+                </GridPane>
+            </VBox>
+        </VBox>
+    </center>
+
+    <!-- BOTTOM: Footer -->
+    <bottom>
+        <VBox alignment="CENTER" spacing="5.0" style="-fx-background-color: #94a3b8; -fx-border-color: #e2e8f0; -fx-border-width: 1 0 0 0;">
+            <padding>
+                <Insets top="12.0" right="15.0" bottom="12.0" left="15.0"/>
+            </padding>
+            <Label text="© 2024 E-Wallet - Agent Dashboard v2.0" 
+                   style="-fx-text-fill: #64748b; -fx-font-size: 12px; -fx-font-weight: 500;"/>
+            <Label text="Pour assistance technique: support@ewallet.com • Tél: +224 123 456 789" 
+                   style="-fx-text-fill: #94a3b8; -fx-font-size: 11px;"/>
+        </VBox>
+    </bottom>
+
+</BorderPane>

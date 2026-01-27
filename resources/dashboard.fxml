@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox xmlns="http://javafx.com/javafx/21" 
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.ewallet.gui.controllers.DashboardController"
+      spacing="15" 
+      style="-fx-padding: 20; -fx-background-color: #ecf0f1;">
+
+    <!-- Header -->
+    <HBox spacing="20" alignment="CENTER_LEFT" style="-fx-border-color: #34495e; -fx-border-width: 0 0 2 0; -fx-padding: 0 0 15 0;">
+        <Label text="E-Wallet" style="-fx-font-size: 24; -fx-font-weight: bold; -fx-text-fill: #2c3e50;">
+            <font>
+                <Font size="24" />
+            </font>
+        </Label>
+        <Label fx:id="welcomeLabel" 
+               text="Bienvenue !" 
+               style="-fx-font-size: 18; -fx-text-fill: #2c3e50; -fx-font-weight: bold;"
+               HBox.hgrow="ALWAYS" />
+        <Button fx:id="logoutButton"
+                text="Déconnexion" 
+                onAction="#handleLogout"
+                style="-fx-font-size: 11; -fx-padding: 8 15 8 15; -fx-background-color: #e74c3c; -fx-text-fill: white; -fx-cursor: hand;"
+                prefHeight="30" />
+    </HBox>
+
+    <!-- Info utilisateur -->
+    <HBox spacing="20" style="-fx-padding: 10; -fx-background-color: white; -fx-border-radius: 5;">
+        <VBox spacing="5" style="-fx-padding: 10;">
+            <Label fx:id="userInfoLabel" 
+                   text="Email: N/A | Statut: N/A" 
+                   style="-fx-font-size: 12; -fx-text-fill: #7f8c8d;" />
+            <Label fx:id="soldeLabel"
+                   text="Solde: 0.00 GNF"
+                   style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #27ae60;" />
+        </VBox>
+    </HBox>
+
+    <!-- Onglets avec fonctionnalités -->
+    <TabPane style="-fx-font-size: 12;" VBox.vgrow="ALWAYS">
+        
+        <!-- Onglet Accueil -->
+        <Tab text="Accueil" closable="false">
+            <VBox spacing="15" style="-fx-padding: 20;">
+                <Label text="Bienvenue dans votre E-Wallet !" style="-fx-font-size: 16; -fx-font-weight: bold;" />
+                <Label text="Utilisez les onglets ci-dessous pour:" style="-fx-font-size: 12;" />
+                <Label text="• Voir votre solde et portefeuille" style="-fx-font-size: 11; -fx-padding: 5;" />
+                <Label text="• Consulter l'historique de vos transactions" style="-fx-font-size: 11; -fx-padding: 5;" />
+                <Label text="• Effectuer un transfert d'argent" style="-fx-font-size: 11; -fx-padding: 5;" />
+                <Label text="• Gérer votre profil" style="-fx-font-size: 11; -fx-padding: 5;" />
+            </VBox>
+        </Tab>
+
+        <!-- Onglet Portefeuille -->
+        <Tab text="Portefeuille" closable="false">
+            <VBox spacing="15" style="-fx-padding: 20;">
+                <Label text="Mon Portefeuille" style="-fx-font-size: 14; -fx-font-weight: bold;" />
+                <HBox spacing="20" style="-fx-padding: 15; -fx-background-color: #3498db; -fx-text-fill: white; -fx-border-radius: 5;">
+                    <VBox spacing="5">
+                        <Label text="Solde Total" style="-fx-font-size: 11; -fx-text-fill: white;" />
+                        <Label fx:id="soldeLabel"
+                               text="5000.00 GNF"
+                               style="-fx-font-size: 20; -fx-font-weight: bold; -fx-text-fill: white;" />
+                    </VBox>
+                </HBox>
+                <Label text="Détails du compte:" style="-fx-font-size: 12; -fx-font-weight: bold;" />
+                <Label text="Type de compte: Client" style="-fx-font-size: 11;" />
+                <Label text="Devise: GNF (Franc Guinéen)" style="-fx-font-size: 11;" />
+                <Label text="Statut: Actif" style="-fx-font-size: 11;" />
+            </VBox>
+        </Tab>
+
+        <!-- Onglet Transfert -->
+        <Tab text="Transfert" closable="false">
+            <VBox spacing="15" style="-fx-padding: 20;">
+                <Label text="Effectuer un Transfert" style="-fx-font-size: 14; -fx-font-weight: bold;" />
+                
+                <Label text="Destinataire" style="-fx-font-size: 11; -fx-font-weight: bold;" />
+                <TextField promptText="Email du destinataire" style="-fx-padding: 10;" prefHeight="35" />
+                
+                <Label text="Montant (GNF)" style="-fx-font-size: 11; -fx-font-weight: bold;" />
+                <TextField promptText="Montant à transférer" style="-fx-padding: 10;" prefHeight="35" />
+                
+                <Label text="Description" style="-fx-font-size: 11; -fx-font-weight: bold;" />
+                <TextField promptText="Motif du transfert (optionnel)" style="-fx-padding: 10;" prefHeight="35" />
+                
+                <Button text="Effectuer le Transfert" 
+                        style="-fx-font-size: 12; -fx-padding: 10; -fx-background-color: #27ae60; -fx-text-fill: white; -fx-cursor: hand;"
+                        prefWidth="200" prefHeight="40" />
+                
+                <Label text="Frais: Gratuit" style="-fx-font-size: 10; -fx-text-fill: #95a5a6;" />
+            </VBox>
+        </Tab>
+
+        <!-- Onglet Historique -->
+        <Tab text="Historique" closable="false">
+            <VBox spacing="15" style="-fx-padding: 20;">
+                <Label text="Historique des Transactions" style="-fx-font-size: 14; -fx-font-weight: bold;" />
+                <TableView style="-fx-font-size: 11;">
+                    <columns>
+                        <TableColumn text="Date" prefWidth="120" />
+                        <TableColumn text="Type" prefWidth="80" />
+                        <TableColumn text="Montant (GNF)" prefWidth="120" />
+                        <TableColumn text="Description" prefWidth="200" />
+                    </columns>
+                </TableView>
+                <Label text="Aucune transaction pour le moment" style="-fx-font-size: 11; -fx-text-fill: #95a5a6;" />
+            </VBox>
+        </Tab>
+
+        <!-- Onglet Profil -->
+        <Tab text="Profil" closable="false">
+            <VBox spacing="15" style="-fx-padding: 20;">
+                <Label text="Mon Profil" style="-fx-font-size: 14; -fx-font-weight: bold;" />
+                <Label fx:id="userInfoLabel" text="Email: N/A" style="-fx-font-size: 12;" />
+                <Label text="Modifier mon mot de passe" style="-fx-font-size: 12; -fx-font-weight: bold;" />
+                <TextField promptText="Ancien mot de passe" style="-fx-padding: 10;" prefHeight="35" />
+                <TextField promptText="Nouveau mot de passe" style="-fx-padding: 10;" prefHeight="35" />
+                <TextField promptText="Confirmer le nouveau mot de passe" style="-fx-padding: 10;" prefHeight="35" />
+                <Button text="Changer le mot de passe" 
+                        style="-fx-font-size: 12; -fx-padding: 10; -fx-background-color: #f39c12; -fx-text-fill: white; -fx-cursor: hand;"
+                        prefWidth="200" prefHeight="40" />
+            </VBox>
+        </Tab>
+    </TabPane>
+
+</VBox>

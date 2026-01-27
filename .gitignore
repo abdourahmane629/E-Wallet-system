@@ -1,0 +1,60 @@
+# Fichiers de compilation
+/target/
+/bin/
+/out/
+/build/
+*.class
+*.jar
+*.war
+*.ear
+
+# Fichiers IDE
+/.idea/
+/.vscode/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+*.launch
+.DS_Store
+
+# Fichiers système
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Logs
+*.log
+logs/
+
+# Base de données
+*.db
+*.sqlite
+*.sqlite3
+/database/
+/db/
+
+# Fichiers temporaires
+*.tmp
+*.temp
+/tmp/
+/temp/
+
+# Fichiers sensibles
+*.properties
+*.cfg
+*.config
+.env
+secrets/
+credentials/
+
+# Fichiers Java
+*.javac
+*.java~
+*.bak
+
+# Fichiers de cache
+.cache/
+.metadata/

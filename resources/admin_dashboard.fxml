@@ -1,0 +1,620 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21" 
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.ewallet.gui.controllers.AdminDashboardController"
+            style="-fx-background-color: #1e1e2f;">
+
+
+ 
+     <top>
+        <VBox style="-fx-background-color: linear-gradient(from 0% 0% to 100% 0%, #4361ee, #7209b7); -fx-padding: 20;">
+            <HBox spacing="20" alignment="CENTER">
+                <Label text="E-Wallet Admin" style="-fx-font-size: 24; -fx-font-weight: bold; -fx-text-fill: white; -fx-font-family: 'Inter';" />
+                
+                <Region HBox.hgrow="ALWAYS" />
+                
+                <Label fx:id="welcomeLabel" 
+                       text="Bienvenue Admin" 
+                       style="-fx-font-size: 14; -fx-text-fill: rgba(255,255,255,0.9); -fx-font-family: 'Inter';" />
+                
+                <Label fx:id="dateLabel"
+                    text="--/--/----"
+                    style="-fx-font-size: 12; 
+                            -fx-text-fill: rgba(255,255,255,0.8); 
+                            -fx-font-family: 'Inter';" />
+                <!-- Badge notifications -->
+                <Button fx:id="notificationsButton"
+                        text="🔔"
+                        onAction="#handleNotifications"
+                        style="-fx-background-color: rgba(255,255,255,0.2); -fx-text-fill: white; -fx-font-size: 14; -fx-min-width: 40; -fx-min-height: 40; -fx-background-radius: 20; -fx-cursor: hand; -fx-border-color: rgba(255,255,255,0.3); -fx-border-width: 1; -fx-font-family: 'Inter';">
+                    <tooltip>
+                        <Tooltip text="Notifications" style="-fx-font-family: 'Inter';" />
+                    </tooltip>
+                </Button>
+                
+                <Button fx:id="logoutButton"
+                        text="Déconnexion" 
+                        onAction="#handleLogout"
+                        style="-fx-font-size: 12; -fx-padding: 10 20; -fx-background-color: rgba(231, 76, 60, 0.8); -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8; -fx-font-family: 'Inter'; -fx-font-weight: 500;"
+                        prefHeight="40" />
+            </HBox>
+        </VBox>
+    </top>
+
+    <!-- CENTER: Onglets principale dans ScrollPane -->
+    <center>
+        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" style="-fx-background: transparent;">
+            <VBox spacing="20" style="-fx-background-color: #f8f4ff;">
+
+                
+                <!-- Onglets -->
+                <TabPane style="-fx-background-color: transparent; -fx-tab-min-width: 150; -fx-font-family: 'Inter';" VBox.vgrow="ALWAYS">
+                    
+                    <!-- Onglet Dashboard (nouveau) -->
+                    <Tab text="🏠 Dashboard" closable="false">
+                        <ScrollPane fitToWidth="true">
+                            <VBox spacing="25" style="-fx-padding: 20;">
+                                <Label text="Tableau de bord Admin" 
+                                       style="-fx-font-size: 28; -fx-font-weight: bold; -fx-text-fill: #1a1a2e; -fx-font-family: 'Inter';" />
+                                
+                                <!-- Cartes de statistiques principales -->
+                                <GridPane hgap="20" vgap="20">
+                                    <columnConstraints>
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10" prefWidth="250" />
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10" prefWidth="250" />
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10" prefWidth="250" />
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10" prefWidth="250" />
+                                    </columnConstraints>
+                                    
+                                    <!-- Carte Utilisateurs -->
+                                    <VBox spacing="12" style="-fx-background-color: #ffffff; -fx-background-radius: 16; -fx-padding: 25; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 15, 0.5, 0, 5);" GridPane.columnIndex="0">
+                                        <HBox alignment="CENTER_LEFT" spacing="15">
+                                            <Label text="👥" style="-fx-font-size: 24;" />
+                                            <VBox spacing="2">
+                                                <Label text="Utilisateurs" style="-fx-font-size: 12; -fx-text-fill: #718096; -fx-font-family: 'Inter';" />
+                                                <Label fx:id="totalUsersLabel" text="0" style="-fx-font-size: 28; -fx-font-weight: bold; -fx-text-fill: #4361ee; -fx-font-family: 'Inter';" />
+                                            </VBox>
+                                        </HBox>
+                                        <Label fx:id="activeUsersLabel" text="ADM: 0 | AGT: 0 | CLI: 0" 
+                                               style="-fx-font-size: 11; -fx-text-fill: #94a3b8; -fx-font-family: 'Inter';" />
+                                    </VBox>
+                                    
+                                    <!-- Carte Transactions -->
+                                    <VBox spacing="12" style="-fx-background-color: #ffffff; -fx-background-radius: 16; -fx-padding: 25; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 15, 0.5, 0, 5);" GridPane.columnIndex="1">
+                                        <HBox alignment="CENTER_LEFT" spacing="15">
+                                            <Label text="📊" style="-fx-font-size: 24;" />
+                                            <VBox spacing="2">
+                                                <Label text="Transactions" style="-fx-font-size: 12; -fx-text-fill: #718096; -fx-font-family: 'Inter';" />
+                                                <Label fx:id="totalTransactionsLabel" text="0" style="-fx-font-size: 28; -fx-font-weight: bold; -fx-text-fill: #7209b7; -fx-font-family: 'Inter';" />
+                                            </VBox>
+                                        </HBox>
+                                        <Label text="Ce mois" style="-fx-font-size: 11; -fx-text-fill: #94a3b8; -fx-font-family: 'Inter';" />
+                                    </VBox>
+                                    
+                                    <!-- Carte Volume Financier -->
+                                    <VBox spacing="12" style="-fx-background-color: #ffffff; -fx-background-radius: 16; -fx-padding: 25; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 15, 0.5, 0, 5);" GridPane.columnIndex="2">
+                                        <HBox alignment="CENTER_LEFT" spacing="15">
+                                            <Label text="💰" style="-fx-font-size: 24;" />
+                                            <VBox spacing="2">
+                                                <Label text="Volume" style="-fx-font-size: 12; -fx-text-fill: #718096; -fx-font-family: 'Inter';" />
+                                                <Label fx:id="totalVolumeLabel" text="0 GNF" style="-fx-font-size: 24; -fx-font-weight: bold; -fx-text-fill: #28a745; -fx-font-family: 'Inter';" />
+                                            </VBox>
+                                        </HBox>
+                                        <Label text="Total transactions" style="-fx-font-size: 11; -fx-text-fill: #94a3b8; -fx-font-family: 'Inter';" />
+                                    </VBox>
+                                    
+                                    <!-- Carte Commissions -->
+                                    <VBox spacing="12" style="-fx-background-color: #ffffff; -fx-background-radius: 16; -fx-padding: 25; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 15, 0.5, 0, 5);" GridPane.columnIndex="3">
+                                        <HBox alignment="CENTER_LEFT" spacing="15">
+                                            <Label text="💸" style="-fx-font-size: 24;" />
+                                            <VBox spacing="2">
+                                                <Label text="Commissions" style="-fx-font-size: 12; -fx-text-fill: #718096; -fx-font-family: 'Inter';" />
+                                                <Label fx:id="totalCommissionsLabel" text="0 GNF" style="-fx-font-size: 24; -fx-font-weight: bold; -fx-text-fill: #ffc107; -fx-font-family: 'Inter';" />
+                                            </VBox>
+                                        </HBox>
+                                        <Label text="Total à payer" style="-fx-font-size: 11; -fx-text-fill: #94a3b8; -fx-font-family: 'Inter';" />
+                                    </VBox>
+                                </GridPane>
+                                
+                                <!-- Section Détails -->
+                                <VBox spacing="20">
+                                    <!-- Transactions par type -->
+                                    <VBox spacing="15">
+                                        <Label text="Transactions par type" 
+                                               style="-fx-font-size: 18; -fx-font-weight: 600; -fx-text-fill: #1a1a2e; -fx-font-family: 'Inter';" />
+                                        <HBox spacing="20">
+                                            <VBox spacing="10" style="-fx-background-color: #f0fdf4; -fx-background-radius: 12; -fx-padding: 20; -fx-border-color: #86efac; -fx-border-width: 1; -fx-border-radius: 12; -fx-min-width: 200;">
+                                                <Label text="📥 Dépôts" style="-fx-font-size: 14; -fx-font-weight: 600; -fx-text-fill: #28a745; -fx-font-family: 'Inter';" />
+                                                <Label fx:id="depositCountLabel" text="0" style="-fx-font-size: 24; -fx-font-weight: bold; -fx-text-fill: #16a34a; -fx-font-family: 'Inter';" />
+                                                <Label text="Total ce mois" style="-fx-font-size: 11; -fx-text-fill: #94a3b8; -fx-font-family: 'Inter';" />
+                                            </VBox>
+                                            
+                                            <VBox spacing="10" style="-fx-background-color: #fef2f2; -fx-background-radius: 12; -fx-padding: 20; -fx-border-color: #fca5a5; -fx-border-width: 1; -fx-border-radius: 12; -fx-min-width: 200;">
+                                                <Label text="📤 Retraits" style="-fx-font-size: 14; -fx-font-weight: 600; -fx-text-fill: #dc3545; -fx-font-family: 'Inter';" />
+                                                <Label fx:id="withdrawalCountLabel" text="0" style="-fx-font-size: 24; -fx-font-weight: bold; -fx-text-fill: #dc2626; -fx-font-family: 'Inter';" />
+                                                <Label text="Total ce mois" style="-fx-font-size: 11; -fx-text-fill: #94a3b8; -fx-font-family: 'Inter';" />
+                                            </VBox>
+                                            
+                                            <VBox spacing="10" style="-fx-background-color: #f0f9ff; -fx-background-radius: 12; -fx-padding: 20; -fx-border-color: #7dd3fc; -fx-border-width: 1; -fx-border-radius: 12; -fx-min-width: 200;">
+                                                <Label text="🔄 Transferts" style="-fx-font-size: 14; -fx-font-weight: 600; -fx-text-fill: #4361ee; -fx-font-family: 'Inter';" />
+                                                <Label fx:id="transferCountLabel" text="0" style="-fx-font-size: 24; -fx-font-weight: bold; -fx-text-fill: #3b82f6; -fx-font-family: 'Inter';" />
+                                                <Label text="Total ce mois" style="-fx-font-size: 11; -fx-text-fill: #94a3b8; -fx-font-family: 'Inter';" />
+                                            </VBox>
+                                        </HBox>
+                                    </VBox>
+                                    
+                                    <!-- Commissions par statut -->
+                                    <VBox spacing="15">
+                                        <Label text="Statut des commissions" 
+                                               style="-fx-font-size: 18; -fx-font-weight: 600; -fx-text-fill: #1a1a2e; -fx-font-family: 'Inter';" />
+                                        <HBox spacing="20">
+                                            <VBox spacing="10" style="-fx-background-color: #fef7cd; -fx-background-radius: 12; -fx-padding: 20; -fx-border-color: #fde047; -fx-border-width: 1; -fx-border-radius: 12; -fx-min-width: 200;">
+                                                <Label text="⏳ En attente" style="-fx-font-size: 14; -fx-font-weight: 600; -fx-text-fill: #f59e0b; -fx-font-family: 'Inter';" />
+                                                <Label fx:id="pendingCommissionsLabel" text="0 GNF" style="-fx-font-size: 20; -fx-font-weight: bold; -fx-text-fill: #d97706; -fx-font-family: 'Inter';" />
+                                                <Label text="À payer" style="-fx-font-size: 11; -fx-text-fill: #94a3b8; -fx-font-family: 'Inter';" />
+                                            </VBox>
+                                            
+                                            <VBox spacing="10" style="-fx-background-color: #f0fdf4; -fx-background-radius: 12; -fx-padding: 20; -fx-border-color: #86efac; -fx-border-width: 1; -fx-border-radius: 12; -fx-min-width: 200;">
+                                                <Label text="✅ Payées" style="-fx-font-size: 14; -fx-font-weight: 600; -fx-text-fill: #16a34a; -fx-font-family: 'Inter';" />
+                                                <Label fx:id="paidCommissionsLabel" text="0 GNF" style="-fx-font-size: 20; -fx-font-weight: bold; -fx-text-fill: #15803d; -fx-font-family: 'Inter';" />
+                                                <Label text="Déjà payées" style="-fx-font-size: 11; -fx-text-fill: #94a3b8; -fx-font-family: 'Inter';" />
+                                            </VBox>
+                                            
+                                            <VBox spacing="10" style="-fx-background-color: #fef2f2; -fx-background-radius: 12; -fx-padding: 20; -fx-border-color: #fca5a5; -fx-border-width: 1; -fx-border-radius: 12; -fx-min-width: 200;">
+                                                <Label text="❌ Annulées" style="-fx-font-size: 14; -fx-font-weight: 600; -fx-text-fill: #dc2626; -fx-font-family: 'Inter';" />
+                                                <Label fx:id="cancelledCommissionsLabel" text="0 GNF" style="-fx-font-size: 20; -fx-font-weight: bold; -fx-text-fill: #b91c1c; -fx-font-family: 'Inter';" />
+                                                <Label text="Annulées" style="-fx-font-size: 11; -fx-text-fill: #94a3b8; -fx-font-family: 'Inter';" />
+                                            </VBox>
+                                        </HBox>
+                                    </VBox>
+                                    
+                                    <!-- Actions rapides -->
+                                    <VBox spacing="15">
+                                        <Label text="Actions rapides" 
+                                               style="-fx-font-size: 18; -fx-font-weight: 600; -fx-text-fill: #1a1a2e; -fx-font-family: 'Inter';" />
+                                        <HBox spacing="20">
+                                            <Button text="🔄 Actualiser" 
+                                                    onAction="#handleRefreshStats"
+                                                    style="-fx-background-color: linear-gradient(to right, #4361ee, #7209b7); -fx-text-fill: white; -fx-font-weight: 600; -fx-font-family: 'Inter'; -fx-padding: 12 24; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-size: 14;" />
+                                            
+                                            <Button fx:id="generateReportButton"
+                                                    text="📈 Générer rapport" 
+                                                    onAction="#handleGenerateReport"
+                                                    style="-fx-background-color: linear-gradient(to right, #28a745, #20c997); -fx-text-fill: white; -fx-font-weight: 600; -fx-font-family: 'Inter'; -fx-padding: 12 24; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-size: 14;" />
+                                        </HBox>
+                                    </VBox>
+                                </VBox>
+                            </VBox>
+                        </ScrollPane>
+                    </Tab>
+                    
+                    <!-- Onglet Créer Utilisateur -->
+                    <Tab text="👤 Créer Utilisateur" closable="false">
+                        <ScrollPane fitToWidth="true">
+                            <VBox spacing="20" style="-fx-padding: 20;">
+                                <Label text="Créer un nouvel utilisateur" 
+                                       style="-fx-font-size: 24; -fx-font-weight: bold; -fx-text-fill: #1a1a2e; -fx-font-family: 'Inter';" />
+                                
+                                <VBox spacing="20" style="-fx-background-color: #ffffff; -fx-background-radius: 16; -fx-padding: 30; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 15, 0.5, 0, 5);">
+                                    <GridPane hgap="20" vgap="20">
+                                        <!-- Ligne 1: Nom et Prénom -->
+                                        <Label text="Nom *" GridPane.rowIndex="0" GridPane.columnIndex="0" 
+                                               style="-fx-font-family: 'Inter'; -fx-font-weight: 500; -fx-text-fill: #1a1a2e;" />
+                                        <TextField fx:id="nomField" 
+                                                promptText="Nom" 
+                                                prefWidth="250" prefHeight="42"
+                                                style="-fx-background-color: white; -fx-border-color: #d1d5db; -fx-border-radius: 8; -fx-padding: 10 15; -fx-font-size: 14px; -fx-font-family: 'Inter';"
+                                                GridPane.rowIndex="0" GridPane.columnIndex="1" />
+
+                                        <Label text="Prénom *" GridPane.rowIndex="0" GridPane.columnIndex="2" 
+                                               style="-fx-font-family: 'Inter'; -fx-font-weight: 500; -fx-text-fill: #1a1a2e;" />
+                                        <TextField fx:id="prenomField" 
+                                                promptText="Prénom" 
+                                                prefWidth="250" prefHeight="42"
+                                                style="-fx-background-color: white; -fx-border-color: #d1d5db; -fx-border-radius: 8; -fx-padding: 10 15; -fx-font-size: 14px; -fx-font-family: 'Inter';"
+                                                GridPane.rowIndex="0" GridPane.columnIndex="3" />
+
+                                        <!-- Ligne 2: Email et Téléphone -->
+                                        <Label text="Email *" GridPane.rowIndex="1" GridPane.columnIndex="0" 
+                                               style="-fx-font-family: 'Inter'; -fx-font-weight: 500; -fx-text-fill: #1a1a2e;" />
+                                        <TextField fx:id="emailField" 
+                                                promptText="email@example.com" 
+                                                prefWidth="250" prefHeight="42"
+                                                style="-fx-background-color: white; -fx-border-color: #d1d5db; -fx-border-radius: 8; -fx-padding: 10 15; -fx-font-size: 14px; -fx-font-family: 'Inter';"
+                                                GridPane.rowIndex="1" GridPane.columnIndex="1" />
+
+                                        <Label text="Téléphone" GridPane.rowIndex="1" GridPane.columnIndex="2" 
+                                               style="-fx-font-family: 'Inter'; -fx-font-weight: 500; -fx-text-fill: #1a1a2e;" />
+                                        <TextField fx:id="telephoneField" 
+                                                promptText="Ex: 620123456" 
+                                                prefWidth="250" prefHeight="42"
+                                                style="-fx-background-color: white; -fx-border-color: #d1d5db; -fx-border-radius: 8; -fx-padding: 10 15; -fx-font-size: 14px; -fx-font-family: 'Inter';"
+                                                GridPane.rowIndex="1" GridPane.columnIndex="3" />
+
+                                        <!-- Ligne 3: Adresse -->
+                                        <Label text="Adresse" GridPane.rowIndex="2" GridPane.columnIndex="0" 
+                                               style="-fx-font-family: 'Inter'; -fx-font-weight: 500; -fx-text-fill: #1a1a2e;" />
+                                        <TextField fx:id="adresseField" 
+                                                promptText="Adresse complète" 
+                                                prefWidth="515" prefHeight="42"
+                                                style="-fx-background-color: white; -fx-border-color: #d1d5db; -fx-border-radius: 8; -fx-padding: 10 15; -fx-font-size: 14px; -fx-font-family: 'Inter';"
+                                                GridPane.rowIndex="2" GridPane.columnIndex="1" GridPane.columnSpan="3" />
+
+                                        <!-- Ligne 4: Rôle -->
+                                        <Label text="Rôle *" GridPane.rowIndex="3" GridPane.columnIndex="0" 
+                                               style="-fx-font-family: 'Inter'; -fx-font-weight: 500; -fx-text-fill: #1a1a2e;" />
+                                        <ComboBox fx:id="roleCombo" 
+                                                prefWidth="250" prefHeight="42"
+                                                style="-fx-background-color: white; -fx-border-color: #d1d5db; -fx-border-radius: 8; -fx-padding: 0 10; -fx-font-size: 14px; -fx-font-family: 'Inter';"
+                                                GridPane.rowIndex="3" GridPane.columnIndex="1" />
+                                        
+                                        <!-- Note sur les rôles -->
+                                        <Label text="USER = CLIENT | AGENT = Agent de dépôt/retrait | ADMIN = Administrateur" 
+                                            GridPane.rowIndex="3" GridPane.columnIndex="2" GridPane.columnSpan="2"
+                                            style="-fx-font-size: 11; -fx-text-fill: #718096; -fx-font-family: 'Inter'; -fx-padding: 10 0 0 0;" />
+
+                                        <!-- Ligne 5: Mot de passe -->
+                                        <Label text="Mot de passe *" GridPane.rowIndex="4" GridPane.columnIndex="0" 
+                                               style="-fx-font-family: 'Inter'; -fx-font-weight: 500; -fx-text-fill: #1a1a2e;" />
+                                        <PasswordField fx:id="passwordField" 
+                                                    promptText="Minimum 6 caractères" 
+                                                    prefWidth="250" prefHeight="42"
+                                                    style="-fx-background-color: white; -fx-border-color: #d1d5db; -fx-border-radius: 8; -fx-padding: 10 15; -fx-font-size: 14px; -fx-font-family: 'Inter';"
+                                                    GridPane.rowIndex="4" GridPane.columnIndex="1" />
+                                        
+                                        <!-- Ligne 6: Confirmer mot de passe -->
+                                        <Label text="Confirmer mot de passe *" GridPane.rowIndex="5" GridPane.columnIndex="0" 
+                                               style="-fx-font-family: 'Inter'; -fx-font-weight: 500; -fx-text-fill: #1a1a2e;" />
+                                        <PasswordField fx:id="confirmPasswordField" 
+                                                    promptText="Répétez le mot de passe" 
+                                                    prefWidth="250" prefHeight="42"
+                                                    style="-fx-background-color: white; -fx-border-color: #d1d5db; -fx-border-radius: 8; -fx-padding: 10 15; -fx-font-size: 14px; -fx-font-family: 'Inter';"
+                                                    GridPane.rowIndex="5" GridPane.columnIndex="1" />
+                                    </GridPane>
+
+                                    <HBox spacing="20" alignment="CENTER" style="-fx-padding: 20 0 0 0;">
+                                        <Button fx:id="createUserButton"
+                                                text="Créer l'utilisateur" 
+                                                onAction="#handleCreateUser"
+                                                style="-fx-background-color: linear-gradient(to right, #4361ee, #7209b7); -fx-text-fill: white; -fx-font-weight: 600; -fx-font-family: 'Inter'; -fx-padding: 12 30; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-size: 14;"
+                                                prefWidth="200"
+                                                prefHeight="45" />
+                                    </HBox>
+                                </VBox>
+                            </VBox>
+                        </ScrollPane>
+                    </Tab>
+
+                    <!-- Onglet Gérer Utilisateurs -->
+                    <Tab text="👥 Gérer Utilisateurs" closable="false">
+                        <VBox spacing="20" style="-fx-padding: 20;">
+                            <Label text="Gestion des utilisateurs" 
+                                   style="-fx-font-size: 24; -fx-font-weight: bold; -fx-text-fill: #1a1a2e; -fx-font-family: 'Inter';" />
+                            
+                            <!-- Filtres utilisateurs -->
+                            <VBox spacing="15" style="-fx-background-color: #ffffff; -fx-background-radius: 16; -fx-padding: 25; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 15, 0.5, 0, 5);">
+                                <Label text="🔍 Recherche avancée" 
+                                       style="-fx-font-size: 16; -fx-font-weight: 600; -fx-text-fill: #1a1a2e; -fx-font-family: 'Inter';" />
+                                <HBox spacing="15" alignment="CENTER_LEFT">
+                                    <TextField fx:id="searchUserField" 
+                                               promptText="Nom, email, téléphone..." 
+                                               prefWidth="250" prefHeight="42"
+                                               style="-fx-background-color: white; -fx-border-color: #d1d5db; -fx-border-radius: 8; -fx-padding: 10 15; -fx-font-size: 14px; -fx-font-family: 'Inter';" />
+                                    <ComboBox fx:id="filterRoleCombo" 
+                                              promptText="Rôle" 
+                                              prefWidth="120" prefHeight="42"
+                                              style="-fx-background-color: white; -fx-border-color: #d1d5db; -fx-border-radius: 8; -fx-padding: 0 10; -fx-font-size: 14px; -fx-font-family: 'Inter';" />
+                                    <ComboBox fx:id="filterStatusCombo" 
+                                              promptText="Statut" 
+                                              prefWidth="120" prefHeight="42"
+                                              style="-fx-background-color: white; -fx-border-color: #d1d5db; -fx-border-radius: 8; -fx-padding: 0 10; -fx-font-size: 14px; -fx-font-family: 'Inter';" />
+                                    <Button fx:id="btnSearchUsers" 
+                                            text="Rechercher" 
+                                            style="-fx-background-color: linear-gradient(to right, #4361ee, #7209b7); -fx-text-fill: white; -fx-font-weight: 600; -fx-font-family: 'Inter'; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-size: 14;" />
+                                    <Button fx:id="btnClearUsers" 
+                                            text="Effacer" 
+                                            style="-fx-background-color: #718096; -fx-text-fill: white; -fx-font-weight: 600; -fx-font-family: 'Inter'; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-size: 14;" />
+                                </HBox>
+                            </VBox>
+                            
+                            <!-- Tableau des utilisateurs -->
+                            <VBox spacing="15" style="-fx-background-color: #ffffff; -fx-background-radius: 16; -fx-padding: 0; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 15, 0.5, 0, 5);">
+                                <TableView fx:id="usersTable" prefHeight="400" style="-fx-background-color: transparent;">
+                                    <columns>
+                                        <TableColumn fx:id="userIdColumn" text="ID" prefWidth="60" style="-fx-font-family: 'Inter';" />
+                                        <TableColumn fx:id="nomColumn" text="Nom complet" prefWidth="220" style="-fx-font-family: 'Inter';" />
+                                        <TableColumn fx:id="emailColumn" text="Email" prefWidth="260" style="-fx-font-family: 'Inter';" />
+                                        <TableColumn fx:id="telephoneColumn" text="Téléphone" prefWidth="130" style="-fx-font-family: 'Inter';" />
+                                        <TableColumn fx:id="roleColumn" text="Rôle" prefWidth="100" style="-fx-font-family: 'Inter';" />
+                                        <TableColumn fx:id="statutColumn" text="Statut" prefWidth="100" style="-fx-font-family: 'Inter';" />
+                                        <TableColumn fx:id="actionsColumn" text="Actions" prefWidth="200" style="-fx-font-family: 'Inter';" />
+                                    </columns>
+                                </TableView>
+                            </VBox>
+                            
+                            <!-- Actions -->
+                            <HBox spacing="15" alignment="CENTER_LEFT">
+                                <Button fx:id="refreshUsersButton"
+                                        text="🔄 Rafraîchir" 
+                                        onAction="#handleRefreshUsers"
+                                        style="-fx-background-color: linear-gradient(to right, #4361ee, #7209b7); -fx-text-fill: white; -fx-font-weight: 600; -fx-font-family: 'Inter'; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-size: 14;" />
+                                <Button fx:id="exportExcelButton"
+                                        text="📊 Exporter Excel" 
+                                        onAction="#handleExportUsersExcel"
+                                        style="-fx-background-color: linear-gradient(to right, #28a745, #20c997); -fx-text-fill: white; -fx-font-weight: 600; -fx-font-family: 'Inter'; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-size: 14;" />
+                                <Button fx:id="exportPDFButton"
+                                        text="📄 Exporter PDF" 
+                                        onAction="#handleExportUsersPDF"
+                                        style="-fx-background-color: linear-gradient(to right, #dc3545, #e83e8c); -fx-text-fill: white; -fx-font-weight: 600; -fx-font-family: 'Inter'; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-size: 14;" />
+                            </HBox>
+                        </VBox>
+                    </Tab>
+
+                    <!-- Onglet Transactions -->
+                    <Tab text="💸 Transactions" closable="false">
+                        <VBox spacing="20" style="-fx-padding: 20;">
+                            <Label text="Gestion des transactions" 
+                                   style="-fx-font-size: 24; -fx-font-weight: bold; -fx-text-fill: #1a1a2e; -fx-font-family: 'Inter';" />
+                            
+                            <!-- Filtres transactions -->
+                            <VBox spacing="15" style="-fx-background-color: #ffffff; -fx-background-radius: 16; -fx-padding: 25; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 15, 0.5, 0, 5);">
+                                <Label text="🔍 Filtres avancés" 
+                                       style="-fx-font-size: 16; -fx-font-weight: 600; -fx-text-fill: #1a1a2e; -fx-font-family: 'Inter';" />
+                                <HBox spacing="15" alignment="CENTER_LEFT">
+                                    <Label text="Période:" 
+                                           style="-fx-font-family: 'Inter'; -fx-text-fill: #1a1a2e;" />
+                                    <DatePicker fx:id="startDatePicker" 
+                                                prefWidth="130" prefHeight="42"
+                                                style="-fx-background-color: white; -fx-border-color: #d1d5db; -fx-border-radius: 8; -fx-font-family: 'Inter';" />
+                                    <Label text="à" 
+                                           style="-fx-font-family: 'Inter'; -fx-text-fill: #718096;" />
+                                    <DatePicker fx:id="endDatePicker" 
+                                                prefWidth="130" prefHeight="42"
+                                                style="-fx-background-color: white; -fx-border-color: #d1d5db; -fx-border-radius: 8; -fx-font-family: 'Inter';" />
+                                    <ComboBox fx:id="typeFilterCombo" 
+                                              prefWidth="100" prefHeight="42"
+                                              style="-fx-background-color: white; -fx-border-color: #d1d5db; -fx-border-radius: 8; -fx-padding: 0 10; -fx-font-size: 14px; -fx-font-family: 'Inter';" />
+                                    <TextField fx:id="searchTransactionField" 
+                                               promptText="N° ou description" 
+                                               prefWidth="150" prefHeight="42"
+                                               style="-fx-background-color: white; -fx-border-color: #d1d5db; -fx-border-radius: 8; -fx-padding: 10 15; -fx-font-size: 14px; -fx-font-family: 'Inter';" />
+                                    <Button fx:id="btnSearchTransactions" 
+                                            text="Filtrer" 
+                                            style="-fx-background-color: linear-gradient(to right, #4361ee, #7209b7); -fx-text-fill: white; -fx-font-weight: 600; -fx-font-family: 'Inter'; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-size: 14;" />
+                                    <Button fx:id="btnClearTransactions" 
+                                            text="Effacer" 
+                                            style="-fx-background-color: #718096; -fx-text-fill: white; -fx-font-weight: 600; -fx-font-family: 'Inter'; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-size: 14;" />
+                                </HBox>
+                            </VBox>
+                            
+                            <!-- Tableau des transactions -->
+                            <VBox spacing="15" style="-fx-background-color: #ffffff; -fx-background-radius: 16; -fx-padding: 0; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 15, 0.5, 0, 5);">
+                                <TableView fx:id="transactionsTable" prefHeight="400" style="-fx-background-color: transparent;">
+                                    <columns>
+                                        <TableColumn fx:id="transactionIdColumn" text="N° Transaction" prefWidth="150" style="-fx-font-family: 'Inter';" />
+                                        <TableColumn fx:id="typeColumn" text="Type" prefWidth="100" style="-fx-font-family: 'Inter';" />
+                                        <TableColumn fx:id="montantColumn" text="Montant (GNF)" prefWidth="120" style="-fx-font-family: 'Inter';" />
+                                        <TableColumn fx:id="descriptionColumn" text="Description" prefWidth="250" style="-fx-font-family: 'Inter';" />
+                                        <TableColumn fx:id="dateColumn" text="Date" prefWidth="150" style="-fx-font-family: 'Inter';" />
+                                        <TableColumn fx:id="agentColumn" text="Agent" prefWidth="150" style="-fx-font-family: 'Inter';" />
+                                    </columns>
+                                </TableView>
+                            </VBox>
+                            
+                            <!-- Statistiques et actions -->
+                            <HBox spacing="20" alignment="CENTER_LEFT">
+                                <VBox spacing="5">
+                                    <Label text="Statistiques:" 
+                                           style="-fx-font-size: 14; -fx-font-weight: 600; -fx-text-fill: #1a1a2e; -fx-font-family: 'Inter';" />
+                                    <Label fx:id="transactionStatsLabel" 
+                                           text="0 transactions - 0 GNF" 
+                                           style="-fx-font-size: 16; -fx-font-weight: bold; -fx-text-fill: #4361ee; -fx-font-family: 'Inter';" />
+                                </VBox>
+                                <Region HBox.hgrow="ALWAYS" />
+                                <Button fx:id="refreshTransactionsButton"
+                                        text="🔄 Rafraîchir" 
+                                        onAction="#handleRefreshTransactions"
+                                        style="-fx-background-color: linear-gradient(to right, #4361ee, #7209b7); -fx-text-fill: white; -fx-font-weight: 600; -fx-font-family: 'Inter'; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-size: 14;" />
+                                <Button fx:id="exportTransactionsButton"
+                                        text="📊 Exporter" 
+                                        onAction="#handleExportTransactions"
+                                        style="-fx-background-color: linear-gradient(to right, #9b59b6, #8e44ad); -fx-text-fill: white; -fx-font-weight: 600; -fx-font-family: 'Inter'; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-size: 14;" />
+                            </HBox>
+                        </VBox>
+                    </Tab>
+
+                    <!-- Onglet Portefeuilles -->
+                    <Tab text="💰 Portefeuilles" closable="false">
+                        <VBox spacing="20" style="-fx-padding: 20;">
+                            <Label text="Gestion des portefeuilles" 
+                                   style="-fx-font-size: 24; -fx-font-weight: bold; -fx-text-fill: #1a1a2e; -fx-font-family: 'Inter';" />
+                            
+                            <!-- Filtres portefeuilles -->
+                            <VBox spacing="15" style="-fx-background-color: #ffffff; -fx-background-radius: 16; -fx-padding: 25; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 15, 0.5, 0, 5);">
+                                <Label text="🔍 Filtres avancés" 
+                                       style="-fx-font-size: 16; -fx-font-weight: 600; -fx-text-fill: #1a1a2e; -fx-font-family: 'Inter';" />
+                                <HBox spacing="15" alignment="CENTER_LEFT">
+                                    <TextField fx:id="searchWalletField" 
+                                               promptText="N° portefeuille" 
+                                               prefWidth="150" prefHeight="42"
+                                               style="-fx-background-color: white; -fx-border-color: #d1d5db; -fx-border-radius: 8; -fx-padding: 10 15; -fx-font-size: 14px; -fx-font-family: 'Inter';" />
+                                    <TextField fx:id="searchWalletClientField" 
+                                               promptText="Client (nom/email)" 
+                                               prefWidth="180" prefHeight="42"
+                                               style="-fx-background-color: white; -fx-border-color: #d1d5db; -fx-border-radius: 8; -fx-padding: 10 15; -fx-font-size: 14px; -fx-font-family: 'Inter';" />
+                                    <ComboBox fx:id="filterWalletStatusCombo" 
+                                              promptText="Statut" 
+                                              prefWidth="100" prefHeight="42"
+                                              style="-fx-background-color: white; -fx-border-color: #d1d5db; -fx-border-radius: 8; -fx-padding: 0 10; -fx-font-size: 14px; -fx-font-family: 'Inter';" />
+                                    <Label text="Solde:" 
+                                           style="-fx-font-family: 'Inter'; -fx-text-fill: #718096;" />
+                                    <TextField fx:id="filterMinBalanceField" 
+                                               promptText="Min" 
+                                               prefWidth="80" prefHeight="42"
+                                               style="-fx-background-color: white; -fx-border-color: #d1d5db; -fx-border-radius: 8; -fx-padding: 10 15; -fx-font-size: 14px; -fx-font-family: 'Inter';" />
+                                    <Label text="à" 
+                                           style="-fx-font-family: 'Inter'; -fx-text-fill: #718096;" />
+                                    <TextField fx:id="filterMaxBalanceField" 
+                                               promptText="Max" 
+                                               prefWidth="80" prefHeight="42"
+                                               style="-fx-background-color: white; -fx-border-color: #d1d5db; -fx-border-radius: 8; -fx-padding: 10 15; -fx-font-size: 14px; -fx-font-family: 'Inter';" />
+                                    <Button fx:id="btnSearchWallets" 
+                                            text="Filtrer" 
+                                            style="-fx-background-color: linear-gradient(to right, #4361ee, #7209b7); -fx-text-fill: white; -fx-font-weight: 600; -fx-font-family: 'Inter'; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-size: 14;" />
+                                    <Button fx:id="btnClearWallets" 
+                                            text="Effacer" 
+                                            style="-fx-background-color: #718096; -fx-text-fill: white; -fx-font-weight: 600; -fx-font-family: 'Inter'; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-size: 14;" />
+                                </HBox>
+                            </VBox>
+                            
+                            <!-- Tableau des portefeuilles -->
+                            <VBox spacing="15" style="-fx-background-color: #ffffff; -fx-background-radius: 16; -fx-padding: 0; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 15, 0.5, 0, 5);">
+                                <TableView fx:id="walletsTable" prefHeight="400" style="-fx-background-color: transparent;">
+                                    <columns>
+                                        <TableColumn fx:id="walletIdColumn" text="N° Portefeuille" prefWidth="150" style="-fx-font-family: 'Inter';" />
+                                        <TableColumn fx:id="clientColumn" text="Client" prefWidth="250" style="-fx-font-family: 'Inter';" />
+                                        <TableColumn fx:id="soldeColumn" text="Solde (GNF)" prefWidth="150" style="-fx-font-family: 'Inter';" />
+                                        <TableColumn fx:id="statutColumnWallet" text="Statut" prefWidth="100" style="-fx-font-family: 'Inter';" />
+                                        <TableColumn fx:id="limiteColumn" text="Limites" prefWidth="200" style="-fx-font-family: 'Inter';" />
+                                        <TableColumn fx:id="actionsColumnWallet" text="Actions" prefWidth="250" style="-fx-font-family: 'Inter';" />
+                                    </columns>
+                                </TableView>
+                            </VBox>
+                            
+                            <!-- Statistiques et actions -->
+                            <HBox spacing="20" alignment="CENTER_LEFT">
+                                <VBox spacing="5">
+                                    <Label text="Statistiques:" 
+                                           style="-fx-font-size: 14; -fx-font-weight: 600; -fx-text-fill: #1a1a2e; -fx-font-family: 'Inter';" />
+                                    <Label fx:id="walletStatsLabel" 
+                                           text="0 portefeuilles - Total: 0 GNF" 
+                                           style="-fx-font-size: 16; -fx-font-weight: bold; -fx-text-fill: #7209b7; -fx-font-family: 'Inter';" />
+                                </VBox>
+                                <Region HBox.hgrow="ALWAYS" />
+                                <Button fx:id="refreshWalletsButton"
+                                        text="🔄 Rafraîchir" 
+                                        onAction="#handleRefreshWallets"
+                                        style="-fx-background-color: linear-gradient(to right, #4361ee, #7209b7); -fx-text-fill: white; -fx-font-weight: 600; -fx-font-family: 'Inter'; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-size: 14;" />
+                                <Button fx:id="exportWalletsButton"
+                                        text="📊 Exporter" 
+                                        onAction="#handleExportWallets"
+                                        style="-fx-background-color: linear-gradient(to right, #9b59b6, #8e44ad); -fx-text-fill: white; -fx-font-weight: 600; -fx-font-family: 'Inter'; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-size: 14;" />
+                            </HBox>
+                        </VBox>
+                    </Tab>
+
+                    <!-- Onglet Commissions -->
+                    <Tab text="💵 Commissions" closable="false">
+                        <VBox spacing="20" style="-fx-padding: 20;">
+                            <Label text="Gestion des commissions" 
+                                   style="-fx-font-size: 24; -fx-font-weight: bold; -fx-text-fill: #1a1a2e; -fx-font-family: 'Inter';" />
+                            
+                            <!-- Filtres commissions -->
+                            <VBox spacing="15" style="-fx-background-color: #ffffff; -fx-background-radius: 16; -fx-padding: 25; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 15, 0.5, 0, 5);">
+                                <Label text="🔍 Filtres avancés" 
+                                       style="-fx-font-size: 16; -fx-font-weight: 600; -fx-text-fill: #1a1a2e; -fx-font-family: 'Inter';" />
+                                <HBox spacing="15" alignment="CENTER_LEFT">
+                                    <Label text="Statut:" 
+                                           style="-fx-font-family: 'Inter'; -fx-text-fill: #1a1a2e;" />
+                                    <ComboBox fx:id="statutFilterCombo" 
+                                              prefWidth="100" prefHeight="42"
+                                              style="-fx-background-color: white; -fx-border-color: #d1d5db; -fx-border-radius: 8; -fx-padding: 0 10; -fx-font-size: 14px; -fx-font-family: 'Inter';" />
+                                    <Label text="Agent:" 
+                                           style="-fx-font-family: 'Inter'; -fx-text-fill: #1a1a2e;" />
+                                    <ComboBox fx:id="agentFilterCombo" 
+                                              prefWidth="150" prefHeight="42"
+                                              style="-fx-background-color: white; -fx-border-color: #d1d5db; -fx-border-radius: 8; -fx-padding: 0 10; -fx-font-size: 14px; -fx-font-family: 'Inter';" />
+                                    <Label text="Période:" 
+                                           style="-fx-font-family: 'Inter'; -fx-text-fill: #1a1a2e;" />
+                                    <DatePicker fx:id="commissionStartDatePicker" 
+                                                prefWidth="130" prefHeight="42"
+                                                style="-fx-background-color: white; -fx-border-color: #d1d5db; -fx-border-radius: 8; -fx-font-family: 'Inter';" />
+                                    <Label text="à" 
+                                           style="-fx-font-family: 'Inter'; -fx-text-fill: #718096;" />
+                                    <DatePicker fx:id="commissionEndDatePicker" 
+                                                prefWidth="130" prefHeight="42"
+                                                style="-fx-background-color: white; -fx-border-color: #d1d5db; -fx-border-radius: 8; -fx-font-family: 'Inter';" />
+                                    <Button fx:id="btnSearchCommissions" 
+                                            text="Filtrer" 
+                                            style="-fx-background-color: linear-gradient(to right, #4361ee, #7209b7); -fx-text-fill: white; -fx-font-weight: 600; -fx-font-family: 'Inter'; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-size: 14;" />
+                                    <Button fx:id="btnClearCommissions" 
+                                            text="Effacer" 
+                                            style="-fx-background-color: #718096; -fx-text-fill: white; -fx-font-weight: 600; -fx-font-family: 'Inter'; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-size: 14;" />
+                                </HBox>
+                            </VBox>
+                            
+                            <!-- Tableau des commissions -->
+                            <VBox spacing="15" style="-fx-background-color: #ffffff; -fx-background-radius: 16; -fx-padding: 0; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 15, 0.5, 0, 5);">
+                                <TableView fx:id="commissionsTable" prefHeight="400" style="-fx-background-color: transparent;">
+                                    <columns>
+                                        <TableColumn fx:id="commissionIdColumn" text="ID" prefWidth="60" style="-fx-font-family: 'Inter';" />
+                                        <TableColumn fx:id="agentColumnCom" text="Agent" prefWidth="200" style="-fx-font-family: 'Inter';" />
+                                        <TableColumn fx:id="montantColumnCom" text="Montant (GNF)" prefWidth="120" style="-fx-font-family: 'Inter';" />
+                                        <TableColumn fx:id="pourcentageColumn" text="Pourcentage (%)" prefWidth="100" style="-fx-font-family: 'Inter';" />
+                                        <TableColumn fx:id="dateColumnCom" text="Date" prefWidth="150" style="-fx-font-family: 'Inter';" />
+                                        <TableColumn fx:id="statutColumnCom" text="Statut" prefWidth="100" style="-fx-font-family: 'Inter';" />
+                                        <TableColumn fx:id="actionsColumnCom" text="Actions" prefWidth="200" style="-fx-font-family: 'Inter';" />
+                                    </columns>
+                                </TableView>
+                            </VBox>
+                            
+                            <!-- Statistiques et actions -->
+                            <HBox spacing="20" alignment="CENTER_LEFT">
+                                <VBox spacing="5">
+                                    <Label text="Statistiques:" 
+                                           style="-fx-font-size: 14; -fx-font-weight: 600; -fx-text-fill: #1a1a2e; -fx-font-family: 'Inter';" />
+                                    <Label fx:id="commissionStatsLabel" 
+                                           text="0 commissions - Total: 0 GNF" 
+                                           style="-fx-font-size: 16; -fx-font-weight: bold; -fx-text-fill: #ffc107; -fx-font-family: 'Inter';" />
+                                </VBox>
+                                <Region HBox.hgrow="ALWAYS" />
+                                <Button fx:id="refreshCommissionsButton"
+                                        text="🔄 Rafraîchir" 
+                                        onAction="#handleRefreshCommissions"
+                                        style="-fx-background-color: linear-gradient(to right, #4361ee, #7209b7); -fx-text-fill: white; -fx-font-weight: 600; -fx-font-family: 'Inter'; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-size: 14;" />
+                                <Button fx:id="payerCommissionButton"
+                                        text="💰 Payer sélection" 
+                                        onAction="#handlePayerCommission"
+                                        style="-fx-background-color: linear-gradient(to right, #28a745, #20c997); -fx-text-fill: white; -fx-font-weight: 600; -fx-font-family: 'Inter'; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-size: 14;" />
+                                <Button fx:id="annulerCommissionButton"
+                                        text="❌ Annuler sélection" 
+                                        onAction="#handleAnnulerCommission"
+                                        style="-fx-background-color: linear-gradient(to right, #dc3545, #e83e8c); -fx-text-fill: white; -fx-font-weight: 600; -fx-font-family: 'Inter'; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-size: 14;" />
+                                <Button fx:id="exporterCommissionsButton"
+                                        text="📊 Exporter" 
+                                        onAction="#handleExporterCommissions"
+                                        style="-fx-background-color: linear-gradient(to right, #9b59b6, #8e44ad); -fx-text-fill: white; -fx-font-weight: 600; -fx-font-family: 'Inter'; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-size: 14;" />
+                            </HBox>
+                        </VBox>
+                    </Tab>
+                </TabPane>
+            </VBox>
+        </ScrollPane>
+    </center>
+
+    <!-- BOTTOM: Footer -->
+    <bottom>
+        <VBox style="
+            -fx-background-color: linear-gradient(
+                from 0% 0% to 100% 0%,
+                #4361ee,
+                #7209b7
+            );
+            -fx-padding: 15;
+        ">
+            <HBox alignment="CENTER">
+                <Label text="© 2024 E-Wallet Admin Dashboard | Version 2.0"
+                    style="-fx-text-fill: rgba(255,255,255,0.8);
+                            -fx-font-size: 12;
+                            -fx-font-family: 'Inter';" />
+            </HBox>
+        </VBox>
+
+    </bottom>
+
+</BorderPane>
