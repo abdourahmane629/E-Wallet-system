@@ -44,7 +44,7 @@ public class UtilisateurDAO {
     /**
      * Trouver un utilisateur par ID
      */
-    public Utilisateur findById(int id) {
+    public static Utilisateur findById(int id) {
         Utilisateur utilisateur = null;
         try (Connection conn = DatabaseConfig.getConnection()) {
             String sql = "SELECT u.utilisateur_id, u.nom, u.prenom, u.email, u.telephone, u.adresse, " +
@@ -529,7 +529,7 @@ public class UtilisateurDAO {
     /**
      * Mapper un ResultSet vers un objet Utilisateur
      */
-    private Utilisateur mapResultSetToUtilisateur(ResultSet rs) throws SQLException {
+    private static Utilisateur mapResultSetToUtilisateur(ResultSet rs) throws SQLException {
         Utilisateur u = new Utilisateur();
         
         u.setUtilisateurId(rs.getInt("utilisateur_id"));

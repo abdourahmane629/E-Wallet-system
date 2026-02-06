@@ -63,7 +63,7 @@ public class WalletService {
             conn.setAutoCommit(false); // Démarrer transaction
             
             // 1. Vérifier l'expéditeur
-            Utilisateur source = utilisateurDAO.findById(utilisateurSourceId);
+            Utilisateur source = UtilisateurDAO.findById(utilisateurSourceId);
             if (source == null || !source.isClient()) {
                 System.err.println("[WALLET SERVICE] Expéditeur invalide ou non client");
                 conn.rollback();

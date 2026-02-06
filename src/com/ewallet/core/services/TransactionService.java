@@ -34,8 +34,8 @@ public class TransactionService {
         
         try {
             // 1. Vérifier l'agent
-            Utilisateur agent = utilisateurDAO.findById(agentId);
-            if (agent == null || !agent.isAgent()) { // CORRECTION : utiliser isAgent()
+            Utilisateur agent = UtilisateurDAO.findById(agentId);
+            if (agent == null || !agent.isAgent()) { 
                 System.err.println("[SERVICE] Agent invalide ou non agent: " + agentId);
                 System.err.println("[SERVICE] Agent role: " + (agent != null ? agent.getRoleName() : "null"));
                 return false;
@@ -43,7 +43,7 @@ public class TransactionService {
             
             // 2. Trouver le client
             Utilisateur client = utilisateurDAO.findByEmail(clientEmail);
-            if (client == null || !client.isClient()) { // CORRECTION : utiliser isClient()
+            if (client == null || !client.isClient()) { 
                 System.err.println("[SERVICE] Client non trouvé ou non client: " + clientEmail);
                 System.err.println("[SERVICE] Client role: " + (client != null ? client.getRoleName() : "null"));
                 return false;
@@ -178,7 +178,7 @@ public class TransactionService {
         
         try {
             // 1. Vérifier l'agent
-            Utilisateur agent = utilisateurDAO.findById(agentId);
+            Utilisateur agent = UtilisateurDAO.findById(agentId);
             if (agent == null || !agent.isAgent()) { // CORRECTION : utiliser isAgent()
                 System.err.println("[SERVICE] Agent invalide ou non agent: " + agentId);
                 System.err.println("[SERVICE] Agent role: " + (agent != null ? agent.getRoleName() : "null"));
@@ -353,7 +353,7 @@ public class TransactionService {
         
         try {
             // 1. Vérifier l'utilisateur
-            Utilisateur utilisateur = utilisateurDAO.findById(utilisateurId);
+            Utilisateur utilisateur = UtilisateurDAO.findById(utilisateurId);
             if (utilisateur == null || !utilisateur.isClient()) {
                 System.err.println("[SERVICE] Utilisateur invalide ou non client: " + utilisateurId);
                 return false;
@@ -457,5 +457,14 @@ public class TransactionService {
     public Map<String, Object> getAgentStatistics(int agentId, String period) {
         System.out.println("[SERVICE] Récupération statistiques pour agent: " + agentId + ", période: " + period);
         return transactionDAO.getAgentStatistics(agentId, period);
+    }
+
+
+    /**
+ * Récupérer les transactions d'un portefeuille
+ */
+    public List<Transaction> getTransactionsByWallet(int portefeuilleId) {
+        System.out.println("[SERVICE] Récupération transactions pour portefeuille: " + portefeuilleId);
+        return transactionDAO.findByWalletId(portefeuilleId);
     }
 }

@@ -14,9 +14,20 @@ echo Java: %JAVA_HOME%
 echo JavaFX: %JAVAFX_HOME%
 echo.
 
-set CLASSPATH=bin;lib/mysql-connector-j-8.0.33.jar;lib/poi-5.2.3.jar;lib/poi-ooxml-5.2.3.jar;lib/xmlbeans-5.1.1.jar;lib/commons-compress-1.25.0.jar;lib/commons-logging-1.2.jar;lib/pdfbox-2.0.29.jar;lib/fontbox-2.0.29.jar
+REM ===== CLASSPATH =====
+set CLASSPATH=bin;^
+lib/mysql-connector-j-8.0.33.jar;^
+lib/itextpdf-5.5.13.3.jar;^
+lib/poi-5.2.3.jar;^
+lib/poi-ooxml-5.2.3.jar;^
+lib/xmlbeans-5.1.1.jar;^
+lib/commons-compress-1.25.0.jar;^
+lib/commons-logging-1.2.jar;^
+lib/pdfbox-2.0.29.jar;^
+lib/fontbox-2.0.29.jar
 
-echo [INFO] Chemin de classe: %CLASSPATH%
+echo [INFO] Chemin de classe:
+echo %CLASSPATH%
 echo.
 
 if not exist bin (
@@ -28,7 +39,7 @@ if not exist bin (
 echo [INFO] Lancement de l'application...
 java ^
     -cp "%CLASSPATH%" ^
-    --module-path "%JAVAFX_HOME%/lib" ^
+    --module-path "%JAVAFX_HOME%\lib" ^
     --add-modules javafx.controls,javafx.fxml,javafx.web ^
     com.ewallet.gui.MainApp
 

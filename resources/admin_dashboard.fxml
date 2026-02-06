@@ -332,7 +332,7 @@
                                         <TableColumn fx:id="telephoneColumn" text="Téléphone" prefWidth="130" style="-fx-font-family: 'Inter';" />
                                         <TableColumn fx:id="roleColumn" text="Rôle" prefWidth="100" style="-fx-font-family: 'Inter';" />
                                         <TableColumn fx:id="statutColumn" text="Statut" prefWidth="100" style="-fx-font-family: 'Inter';" />
-                                        <TableColumn fx:id="actionsColumn" text="Actions" prefWidth="200" style="-fx-font-family: 'Inter';" />
+                                        <TableColumn fx:id="actionsColumn" text="Actions" prefWidth="300" style="-fx-font-family: 'Inter';" />
                                     </columns>
                                 </TableView>
                             </VBox>
@@ -343,14 +343,6 @@
                                         text="🔄 Rafraîchir" 
                                         onAction="#handleRefreshUsers"
                                         style="-fx-background-color: linear-gradient(to right, #4361ee, #7209b7); -fx-text-fill: white; -fx-font-weight: 600; -fx-font-family: 'Inter'; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-size: 14;" />
-                                <Button fx:id="exportExcelButton"
-                                        text="📊 Exporter Excel" 
-                                        onAction="#handleExportUsersExcel"
-                                        style="-fx-background-color: linear-gradient(to right, #28a745, #20c997); -fx-text-fill: white; -fx-font-weight: 600; -fx-font-family: 'Inter'; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-size: 14;" />
-                                <Button fx:id="exportPDFButton"
-                                        text="📄 Exporter PDF" 
-                                        onAction="#handleExportUsersPDF"
-                                        style="-fx-background-color: linear-gradient(to right, #dc3545, #e83e8c); -fx-text-fill: white; -fx-font-weight: 600; -fx-font-family: 'Inter'; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-size: 14;" />
                             </HBox>
                         </VBox>
                     </Tab>
@@ -420,10 +412,6 @@
                                         text="🔄 Rafraîchir" 
                                         onAction="#handleRefreshTransactions"
                                         style="-fx-background-color: linear-gradient(to right, #4361ee, #7209b7); -fx-text-fill: white; -fx-font-weight: 600; -fx-font-family: 'Inter'; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-size: 14;" />
-                                <Button fx:id="exportTransactionsButton"
-                                        text="📊 Exporter" 
-                                        onAction="#handleExportTransactions"
-                                        style="-fx-background-color: linear-gradient(to right, #9b59b6, #8e44ad); -fx-text-fill: white; -fx-font-weight: 600; -fx-font-family: 'Inter'; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-size: 14;" />
                             </HBox>
                         </VBox>
                     </Tab>
@@ -500,15 +488,11 @@
                                         text="🔄 Rafraîchir" 
                                         onAction="#handleRefreshWallets"
                                         style="-fx-background-color: linear-gradient(to right, #4361ee, #7209b7); -fx-text-fill: white; -fx-font-weight: 600; -fx-font-family: 'Inter'; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-size: 14;" />
-                                <Button fx:id="exportWalletsButton"
-                                        text="📊 Exporter" 
-                                        onAction="#handleExportWallets"
-                                        style="-fx-background-color: linear-gradient(to right, #9b59b6, #8e44ad); -fx-text-fill: white; -fx-font-weight: 600; -fx-font-family: 'Inter'; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-size: 14;" />
                             </HBox>
                         </VBox>
                     </Tab>
 
-                    <!-- Onglet Commissions -->
+                    <!-- Onglet Commissions (CORRIGÉ) -->
                     <Tab text="💵 Commissions" closable="false">
                         <VBox spacing="20" style="-fx-padding: 20;">
                             <Label text="Gestion des commissions" 
@@ -585,13 +569,84 @@
                                         text="❌ Annuler sélection" 
                                         onAction="#handleAnnulerCommission"
                                         style="-fx-background-color: linear-gradient(to right, #dc3545, #e83e8c); -fx-text-fill: white; -fx-font-weight: 600; -fx-font-family: 'Inter'; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-size: 14;" />
-                                <Button fx:id="exporterCommissionsButton"
-                                        text="📊 Exporter" 
-                                        onAction="#handleExporterCommissions"
-                                        style="-fx-background-color: linear-gradient(to right, #9b59b6, #8e44ad); -fx-text-fill: white; -fx-font-weight: 600; -fx-font-family: 'Inter'; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-size: 14;" />
                             </HBox>
                         </VBox>
                     </Tab>
+
+                    <!-- Onglet Audit  -->
+                    <Tab text="📋 Journal d'Audit" closable="false">
+                        <VBox spacing="20" style="-fx-padding: 20;">
+                            <Label text="Journal d'Audit &amp; Rapports" 
+                                style="-fx-font-size: 24; -fx-font-weight: bold; -fx-text-fill: #1a1a2e; -fx-font-family: 'Inter';" />
+                            
+                            <!-- Filtres audit -->
+                            <VBox spacing="15" style="-fx-background-color: #ffffff; -fx-background-radius: 16; -fx-padding: 25; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 15, 0.5, 0, 5);">
+                                <Label text="🔍 Filtres de recherche" 
+                                    style="-fx-font-size: 16; -fx-font-weight: 600; -fx-text-fill: #1a1a2e; -fx-font-family: 'Inter';" />
+                                <HBox spacing="15" alignment="CENTER_LEFT">
+                                    <TextField fx:id="searchAuditField" 
+                                            promptText="Action, entité..." 
+                                            prefWidth="200" prefHeight="42"
+                                            style="-fx-background-color: white; -fx-border-color: #d1d5db; -fx-border-radius: 8; -fx-padding: 10 15; -fx-font-size: 14px; -fx-font-family: 'Inter';" />
+                                    <ComboBox fx:id="filterAuditActionCombo" 
+                                            promptText="Type d'action" 
+                                            prefWidth="150" prefHeight="42"
+                                            style="-fx-background-color: white; -fx-border-color: #d1d5db; -fx-border-radius: 8; -fx-padding: 0 10; -fx-font-size: 14px; -fx-font-family: 'Inter';" />
+                                    <ComboBox fx:id="filterAuditEntityCombo" 
+                                            promptText="Entité" 
+                                            prefWidth="120" prefHeight="42"
+                                            style="-fx-background-color: white; -fx-border-color: #d1d5db; -fx-border-radius: 8; -fx-padding: 0 10; -fx-font-size: 14px; -fx-font-family: 'Inter';" />
+                                    <Label text="Date:" 
+                                        style="-fx-font-family: 'Inter'; -fx-text-fill: #1a1a2e;" />
+                                    <DatePicker fx:id="auditStartDatePicker" 
+                                                prefWidth="130" prefHeight="42"
+                                                style="-fx-background-color: white; -fx-border-color: #d1d5db; -fx-border-radius: 8; -fx-font-family: 'Inter';" />
+                                    <Label text="à" 
+                                        style="-fx-font-family: 'Inter'; -fx-text-fill: #718096;" />
+                                    <DatePicker fx:id="auditEndDatePicker" 
+                                                prefWidth="130" prefHeight="42"
+                                                style="-fx-background-color: white; -fx-border-color: #d1d5db; -fx-border-radius: 8; -fx-font-family: 'Inter';" />
+                                    <Button fx:id="btnSearchAudit" 
+                                            text="Rechercher" 
+                                            style="-fx-background-color: linear-gradient(to right, #4361ee, #7209b7); -fx-text-fill: white; -fx-font-weight: 600; -fx-font-family: 'Inter'; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-size: 14;" />
+                                    <Button fx:id="btnClearAudit" 
+                                            text="Effacer" 
+                                            style="-fx-background-color: #718096; -fx-text-fill: white; -fx-font-weight: 600; -fx-font-family: 'Inter'; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-size: 14;" />
+                                    <Button fx:id="btnExportAudit" 
+                                            text="📊 Exporter PDF" 
+                                            style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: 600; -fx-font-family: 'Inter'; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-size: 14;" />
+                                </HBox>
+                            </VBox>
+                            
+                            <!-- Tableau d'audit -->
+                            <VBox spacing="15" style="-fx-background-color: #ffffff; -fx-background-radius: 16; -fx-padding: 0; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 15, 0.5, 0, 5);">
+                                <TableView fx:id="auditTable" prefHeight="450" style="-fx-background-color: transparent;">
+                                    <columns>
+                                        <TableColumn fx:id="auditIdColumn" text="ID" prefWidth="60" />
+                                        <TableColumn fx:id="auditUserColumn" text="Utilisateur" prefWidth="150" />
+                                        <TableColumn fx:id="auditActionColumn" text="Action" prefWidth="150" />
+                                        <TableColumn fx:id="auditEntityColumn" text="Entité" prefWidth="100" />
+                                        <TableColumn fx:id="auditEntityIdColumn" text="ID Entité" prefWidth="80" />
+                                        <TableColumn fx:id="auditOldValueColumn" text="Ancienne Valeur" prefWidth="150" />
+                                        <TableColumn fx:id="auditNewValueColumn" text="Nouvelle Valeur" prefWidth="150" />
+                                        <TableColumn fx:id="auditIpColumn" text="IP" prefWidth="120" />
+                                        <TableColumn fx:id="auditDateColumn" text="Date" prefWidth="150" />
+                                    </columns>
+                                </TableView>
+                            </VBox>
+                            
+                            <!-- Boutons d'action -->
+                            <HBox spacing="15" alignment="CENTER_LEFT">
+                                <Button fx:id="refreshAuditButton"
+                                        text="🔄 Rafraîchir" 
+                                        style="-fx-background-color: linear-gradient(to right, #4361ee, #7209b7); -fx-text-fill: white; -fx-font-weight: 600; -fx-font-family: 'Inter'; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-size: 14;" />
+                                <Label fx:id="auditStatsLabel" 
+                                    text="0 logs d'audit" 
+                                    style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #4361ee; -fx-font-family: 'Inter';" />
+                            </HBox>
+                        </VBox>
+                    </Tab>
+                    
                 </TabPane>
             </VBox>
         </ScrollPane>
@@ -614,7 +669,6 @@
                             -fx-font-family: 'Inter';" />
             </HBox>
         </VBox>
-
     </bottom>
 
 </BorderPane>

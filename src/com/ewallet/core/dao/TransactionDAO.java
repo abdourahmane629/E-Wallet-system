@@ -858,4 +858,40 @@ public class TransactionDAO {
         
         return transactions;
     }
+
+
+    /**
+ * Trouver les transactions par ID de portefeuille
+ */
+    public List<Transaction> findByWalletId(int portefeuilleId) {
+        List<Transaction> transactions = new ArrayList<>();
+        String sql = "SELECT * FROM transactions WHERE portefeuille_id = ? ORDER BY date_transaction DESC";
+        
+        try (Connection conn = DatabaseConfig.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, portefeuilleId);
+            ResultSet rs = stmt.executeQuery();
+            
+            while (rs.next()) {
+                Transaction transaction = new Transaction();
+                transaction.setId(rs.getInt("id"));
+                transaction.setNumeroTransaction(rs.getString("numero_transaction"));
+                transaction.setPortefeuilleId(rs.getInt("portefeuille_id"));
+                transaction.setMontant(rs.getDouble("montant"));
+                transaction.setType(rs.getString("type"));
+                transaction.setDescription(rs.getString("description"));
+                transaction.setDateTransaction(rs.getTimestamp("date_transaction").toLocalDateTime());
+                transaction.setStatut(rs.getString("statut"));
+                transaction.setAgentId(rs.getInt("agent_id"));
+                
+                transactions.add(transaction);
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de la récupération des transactions: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return transactions;
+    }
 }

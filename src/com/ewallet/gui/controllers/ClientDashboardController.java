@@ -42,6 +42,11 @@ import java.util.Map;
 import com.ewallet.core.services.NotificationService;
 import java.sql.SQLException;
 
+
+import javafx.stage.FileChooser;
+import java.io.File;
+import com.ewallet.core.utils.PDFExporter;
+
 @SuppressWarnings("unused")
 public class ClientDashboardController implements Initializable {
     
@@ -182,6 +187,86 @@ public class ClientDashboardController implements Initializable {
             System.err.println("[CLIENT] Erreur initialisation: " + e.getMessage());
             e.printStackTrace();
             showAlert("Erreur", "Impossible de charger le tableau de bord.");
+        }
+    }
+
+    @FXML
+    private void handleExportPDF() {
+        try {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Exporter mon historique");
+            fileChooser.setInitialFileName("historique_" + currentUser.getPrenom().toLowerCase() + "_" + System.currentTimeMillis() + ".pdf");
+            fileChooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("PDF Files", "*.pdf")
+            );
+            
+            File file = fileChooser.showSaveDialog(logoutButton.getScene().getWindow());
+            
+            if (file != null) {
+                // Récupérer le portefeuille
+                Portefeuille portefeuille = portefeuilleDAO.findByUtilisateurId(currentUser.getUtilisateurId());
+                
+                if (portefeuille == null) {
+                    showAlert("Erreur", "Aucun portefeuille trouvé.");
+                    return;
+                }
+                
+                // Récupérer les transactions
+                List<Transaction> transactions;
+                
+                if (transactionsList != null && !transactionsList.isEmpty()) {
+                    // Utiliser les transactions déjà filtrées
+                    transactions = new ArrayList<>(transactionsList);
+                } else {
+                    // Charger toutes les transactions
+                    transactions = transactionDAO.findByPortefeuilleId(portefeuille.getId());
+                }
+                
+                boolean success = PDFExporter.exportTransactionsToPDF(
+                    transactions, 
+                    file.getAbsolutePath(),
+                    "Historique Personnel - " + currentUser.getPrenom() + " " + currentUser.getNom()
+                );
+                
+                if (success) {
+                    showAlert("Succès", "PDF exporté avec succès !\n\nChemin: " + file.getAbsolutePath());
+                } else {
+                    showAlert("Erreur", "Erreur lors de l'exportation.");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert("Erreur", "Une erreur est survenue : " + e.getMessage());
+        }
+    }
+
+    private void exportTransactionReceipt(Transaction transaction) {
+        try {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Exporter le reçu de transaction");
+            fileChooser.setInitialFileName("reçu_" + (transaction.getNumeroTransaction() != null ? transaction.getNumeroTransaction() : "transaction") + ".pdf");
+            fileChooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("PDF Files", "*.pdf")
+            );
+            
+            File file = fileChooser.showSaveDialog(logoutButton.getScene().getWindow());
+            
+            if (file != null) {
+                boolean success = PDFExporter.exportTransactionReceipt(
+                    transaction, 
+                    currentUser, 
+                    file.getAbsolutePath()
+                );
+                
+                if (success) {
+                    showAlert("Succès", "Reçu exporté avec succès !");
+                } else {
+                    showAlert("Erreur", "Erreur lors de l'exportation du reçu.");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert("Erreur", "Erreur lors de l'exportation : " + e.getMessage());
         }
     }
     
@@ -385,7 +470,7 @@ public class ClientDashboardController implements Initializable {
     
     // ==== SECTION TABLEAU DE BORD PROFESSIONNEL ====
     
-    private void showDashboard() {
+   private void showDashboard() {
         mainContent.getChildren().clear();
         
         ScrollPane scrollPane = new ScrollPane();
@@ -415,7 +500,7 @@ public class ClientDashboardController implements Initializable {
         
         Button refreshBtn = new Button("🔄 Actualiser");
         refreshBtn.setStyle("-fx-background-color: " + INFO_COLOR + "; -fx-text-fill: white; " +
-                           "-fx-font-weight: 600; -fx-padding: 8 16; -fx-background-radius: 6;");
+                        "-fx-font-weight: 600; -fx-padding: 8 16; -fx-background-radius: 6;");
         refreshBtn.setOnAction(e -> refreshDashboard());
         
         headerBox.getChildren().addAll(titleBox, spacer, refreshBtn);
@@ -424,8 +509,8 @@ public class ClientDashboardController implements Initializable {
         VBox balanceCard = new VBox(10);
         balanceCard.setPadding(new Insets(20));
         balanceCard.setStyle("-fx-background-color: white; -fx-background-radius: 12; " +
-                           "-fx-border-color: " + BORDER_COLOR + "; -fx-border-width: 1; " +
-                           "-fx-border-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 10, 0, 0, 2);");
+                        "-fx-border-color: " + BORDER_COLOR + "; -fx-border-width: 1; " +
+                        "-fx-border-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 10, 0, 0, 2);");
         balanceCard.setPrefWidth(400);
         balanceCard.setAlignment(Pos.CENTER);
         
@@ -484,23 +569,29 @@ public class ClientDashboardController implements Initializable {
             "Voir vos alertes et messages", "#ff9800");
         notificationsCard.setOnMouseClicked(e -> showNotificationsInterface());
         
+        // CARTE EXPORT PDF (NOUVELLE)
+        VBox exportCard = createQuickActionCard("📄", "Exporter PDF", 
+            "Exporter votre historique en PDF", "#9c27b0");
+        exportCard.setOnMouseClicked(e -> handleExportPDF());
+        
         quickActions.add(transferCard, 0, 0);
         quickActions.add(servicesCard, 1, 0);
         quickActions.add(historyCard, 0, 1);
         quickActions.add(profileCard, 1, 1);
         quickActions.add(securityCard, 0, 2);
         quickActions.add(notificationsCard, 1, 2);
+        quickActions.add(exportCard, 0, 3);
         
         dashboardContent.getChildren().addAll(headerBox, balanceCard, quickActions);
         scrollPane.setContent(dashboardContent);
         mainContent.getChildren().add(scrollPane);
     }
-    
+
     private VBox createQuickActionCard(String icon, String title, String description, String color) {
         VBox card = new VBox(10);
         card.setAlignment(Pos.CENTER);
         card.setStyle("-fx-background-color: white; -fx-border-color: " + BORDER_COLOR + "; -fx-border-radius: 10; " +
-                     "-fx-padding: 20; -fx-cursor: hand;");
+                    "-fx-padding: 20; -fx-cursor: hand;");
         card.setPrefSize(180, 150);
         
         Label iconLabel = new Label(icon);
@@ -1352,9 +1443,10 @@ public class ClientDashboardController implements Initializable {
     
     
     
-    // ==== SECTION HISTORIQUE (Votre code existant adapté) ====
-    
+    // ==== SECTION HISTORIQUE  ====
+  
     @SuppressWarnings("unchecked")
+
     private void showHistoryInterface() {
         mainContent.getChildren().clear();
         
@@ -1393,11 +1485,16 @@ public class ClientDashboardController implements Initializable {
             loadTransactions();
         });
         
+        // BOUTON EXPORT PDF
+        Button exportButton = new Button("📄 Exporter PDF");
+        exportButton.setStyle("-fx-background-color: " + ERROR_COLOR + "; -fx-text-fill: white; -fx-font-weight: 600; -fx-padding: 8 16;");
+        exportButton.setOnAction(e -> handleExportPDF());
+        
         filters.getChildren().addAll(
             new Label("Filtres:"), filterTypeCombo, 
             new Label("Du:"), startDatePicker, 
             new Label("Au:"), endDatePicker, 
-            filterButton, refreshButton
+            filterButton, refreshButton, exportButton
         );
         
         // Tableau des transactions
@@ -1478,7 +1575,42 @@ public class ClientDashboardController implements Initializable {
             new javafx.beans.property.SimpleStringProperty(cellData.getValue().getStatut())
         );
         
-        transactionsTable.getColumns().addAll(dateCol, typeCol, amountCol, descCol, statusCol);
+        // COLONNE REÇU PDF (NOUVELLE)
+        TableColumn<Transaction, Void> receiptCol = new TableColumn<>("Reçu");
+        receiptCol.setPrefWidth(70);
+        receiptCol.setCellFactory(param -> new TableCell<Transaction, Void>() {
+            private final Button receiptBtn = new Button("📄");
+            
+            {
+                receiptBtn.setStyle("-fx-background-color: " + ERROR_COLOR + "; -fx-text-fill: white; -fx-font-size: 11px; -fx-padding: 4 8;");
+                receiptBtn.setOnAction(e -> {
+                    Transaction transaction = getTableView().getItems().get(getIndex());
+                    exportTransactionReceipt(transaction);
+                });
+                
+                // Effet hover
+                receiptBtn.setOnMouseEntered(mouseEvent -> receiptBtn.setStyle(
+                    "-fx-background-color: #c0392b; -fx-text-fill: white; -fx-font-size: 11px; -fx-padding: 4 8; -fx-cursor: hand;"
+                ));
+                receiptBtn.setOnMouseExited(mouseEvent -> receiptBtn.setStyle(
+                    "-fx-background-color: " + ERROR_COLOR + "; -fx-text-fill: white; -fx-font-size: 11px; -fx-padding: 4 8;"
+                ));
+            }
+            
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setGraphic(null);
+                } else {
+                    HBox hbox = new HBox(receiptBtn);
+                    hbox.setAlignment(Pos.CENTER);
+                    setGraphic(hbox);
+                }
+            }
+        });
+        
+        transactionsTable.getColumns().addAll(dateCol, typeCol, amountCol, descCol, statusCol, receiptCol);
         
         // Résumé
         HBox summary = new HBox(20);
@@ -1584,6 +1716,8 @@ public class ClientDashboardController implements Initializable {
     
     // ==== SECTION NOTIFICATIONS (Nouveau) ====
     
+        @SuppressWarnings("unchecked")
+
         private void showNotificationsInterface() {
         mainContent.getChildren().clear();
         

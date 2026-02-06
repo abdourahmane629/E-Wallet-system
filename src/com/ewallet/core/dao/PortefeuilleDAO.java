@@ -38,7 +38,7 @@ public class PortefeuilleDAO {
     /**
      * Trouver un portefeuille par ID
      */
-    public Portefeuille findById(int portefeuilleId) {
+    public static Portefeuille findById(int portefeuilleId) {
         Portefeuille portefeuille = null;
         try (Connection conn = DatabaseConfig.getConnection()) {
             String sql = "SELECT portefeuille_id, utilisateur_id, numero_portefeuille, solde, " +
@@ -561,7 +561,7 @@ public class PortefeuilleDAO {
     /**
      * Mapper ResultSet vers Portefeuille
      */
-    private Portefeuille mapResultSetToPortefeuille(ResultSet rs) throws SQLException {
+    private static Portefeuille mapResultSetToPortefeuille(ResultSet rs) throws SQLException {
         Portefeuille p = new Portefeuille();
         
         p.setId(rs.getInt("portefeuille_id"));

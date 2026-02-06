@@ -14,7 +14,7 @@ import java.util.Map;
 
 
 public class CommissionService {
-    
+
     private final CommissionDAO commissionDAO;
     private final JournalAuditDAO journalAuditDAO;
     private final UtilisateurDAO utilisateurDAO;
@@ -52,7 +52,7 @@ public class CommissionService {
             }
             
             // 2. Vérifier que l'admin a les droits
-            Utilisateur admin = utilisateurDAO.findById(adminId);
+            Utilisateur admin = UtilisateurDAO.findById(adminId);
             if (admin == null || !admin.isAdmin()) {
                 System.err.println("[COMMISSION] Utilisateur non admin: " + adminId);
                 return false;
@@ -120,7 +120,7 @@ public class CommissionService {
             if (commission == null) return false;
             
             // Vérifier que l'admin a les droits
-            Utilisateur admin = utilisateurDAO.findById(adminId);
+            Utilisateur admin = UtilisateurDAO.findById(adminId);
             if (admin == null || !admin.isAdmin()) {
                 return false;
             }

@@ -11,6 +11,7 @@ import java.util.*;
 
 public class ProfileService {
     
+
     private final UtilisateurDAO utilisateurDAO = new UtilisateurDAO();
     private final JournalAuditDAO journalAuditDAO = new JournalAuditDAO();
     private final RoleDAO roleDAO = new RoleDAO();
@@ -219,7 +220,7 @@ public class ProfileService {
         
         try {
             // Récupérer l'utilisateur cible
-            Utilisateur targetUser = utilisateurDAO.findById(targetUserId);
+            Utilisateur targetUser = UtilisateurDAO.findById(targetUserId);
             if (targetUser == null) {
                 result.put("success", false);
                 result.put("message", "Utilisateur non trouvé");
@@ -407,7 +408,7 @@ public class ProfileService {
             }
             
             // Récupérer l'utilisateur
-            Utilisateur targetUser = utilisateurDAO.findById(targetUserId);
+            Utilisateur targetUser = UtilisateurDAO.findById(targetUserId);
             if (targetUser == null) {
                 result.put("success", false);
                 result.put("message", "Utilisateur non trouvé");
@@ -591,7 +592,7 @@ public class ProfileService {
             // Si pas d'audit, on peut ajouter des informations basiques
             if (history.isEmpty()) {
                 // Récupérer l'utilisateur pour sa date de création
-                Utilisateur user = utilisateurDAO.findById(userId);
+                Utilisateur user = UtilisateurDAO.findById(userId);
                 if (user != null) {
                     Map<String, Object> creationEntry = new HashMap<>();
                     creationEntry.put("date", user.getDateInscription());

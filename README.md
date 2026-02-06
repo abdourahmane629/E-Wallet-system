@@ -1,5 +1,3 @@
-<div align="center">
-
 # 💳 Système de Portefeuille Électronique (E-Wallet)
 
 ### Application de gestion financière numérique sécurisée
@@ -78,7 +76,6 @@ Développer une application **E-Wallet** assurant la gestion sécurisée des com
 ### 📊 Rapports et statistiques
 - Historique des transactions par utilisateur  
 - Rapports journaliers et mensuels  
-- Export **PDF / Excel**  
 - Tableau de bord statistique  
 
 ---
@@ -119,7 +116,7 @@ Le système repose sur une **architecture client–serveur** :
 
 ## 📁 Structure du projet
 
-```text
+
 e-wallet-system/
 │
 ├── backend/        # API backend Java (Spring Boot)

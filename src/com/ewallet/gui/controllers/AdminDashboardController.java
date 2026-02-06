@@ -3,6 +3,7 @@ package com.ewallet.gui.controllers;
 import com.ewallet.core.models.Utilisateur;
 import com.ewallet.core.models.Transaction;
 import com.ewallet.core.models.Commission;
+import com.ewallet.core.models.JournalAudit;
 import com.ewallet.core.models.Portefeuille;
 import com.ewallet.core.models.StatutUtilisateur;
 import com.ewallet.core.dao.UtilisateurDAO;
@@ -10,10 +11,11 @@ import com.ewallet.core.dao.RoleDAO;
 import com.ewallet.core.dao.TransactionDAO;
 import com.ewallet.core.dao.PortefeuilleDAO;
 import com.ewallet.core.dao.CommissionDAO;
+import com.ewallet.core.dao.JournalAuditDAO;
 import com.ewallet.core.services.ReportService;
 import com.ewallet.core.services.CommissionService;
 import com.ewallet.core.services.ProfileService;
-import com.ewallet.core.utils.ExportUtil;
+import com.ewallet.core.utils.PDFExporter;
 import com.ewallet.core.utils.SecurityUtil;
 import com.ewallet.core.utils.ValidationUtil;
 import com.ewallet.gui.MainApp;
@@ -24,6 +26,7 @@ import javafx.scene.control.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -49,6 +52,8 @@ import java.util.Optional;
 import com.ewallet.core.services.NotificationService;
 import com.ewallet.core.models.Notification;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+
 
 @SuppressWarnings("unused")
 public class AdminDashboardController {
@@ -63,7 +68,7 @@ public class AdminDashboardController {
     private ReportService reportService = new ReportService();
     private NotificationService notificationService;
     private ProfileService profileService = new ProfileService();
-
+    private JournalAuditDAO journalAuditDAO = new JournalAuditDAO();
     @FXML private Label welcomeLabel;
     @FXML private Button logoutButton;
     @FXML private Button notificationsButton;
@@ -88,8 +93,7 @@ public class AdminDashboardController {
     @FXML private TableColumn<Utilisateur, String> statutColumn;
     @FXML private TableColumn<Utilisateur, Void> actionsColumn;
     @FXML private Button refreshUsersButton;
-    @FXML private Button exportExcelButton;
-    @FXML private Button exportPDFButton;
+  
     
     // Recherche avancée
     @FXML private TextField searchUserField;
@@ -116,7 +120,6 @@ public class AdminDashboardController {
     @FXML private ComboBox<String> filterTransactionStatusCombo;
     @FXML private Button btnSearchTransactions;
     @FXML private Button btnClearTransactions;
-    @FXML private Button exportTransactionsButton;
     @FXML private Label transactionStatsLabel;
 
     // Onglet Portefeuilles
@@ -134,7 +137,6 @@ public class AdminDashboardController {
     @FXML private TextField filterMaxBalanceField;
     @FXML private Button btnSearchWallets;
     @FXML private Button btnClearWallets;
-    @FXML private Button exportWalletsButton;
     @FXML private Label walletStatsLabel;
     @FXML private TableColumn<Portefeuille, Double> imiteRetraitQuotidienColumn;
     @FXML private TableColumn<Portefeuille, Double> limiteTransfertColumn;
@@ -154,12 +156,36 @@ public class AdminDashboardController {
     @FXML private Button refreshCommissionsButton;
     @FXML private Button payerCommissionButton;
     @FXML private Button annulerCommissionButton;
-    @FXML private Button exporterCommissionsButton;
     @FXML private DatePicker commissionStartDatePicker;
     @FXML private DatePicker commissionEndDatePicker;
     @FXML private Button btnSearchCommissions;
     @FXML private Button btnClearCommissions;
     @FXML private Label commissionStatsLabel;
+
+
+    // Variables pour l'audit
+    @FXML private TableView<JournalAudit> auditTable;
+    @FXML private TableColumn<JournalAudit, Integer> auditIdColumn;
+    @FXML private TableColumn<JournalAudit, String> auditUserColumn;
+    @FXML private TableColumn<JournalAudit, String> auditActionColumn;
+    @FXML private TableColumn<JournalAudit, String> auditEntityColumn;
+    @FXML private TableColumn<JournalAudit, Integer> auditEntityIdColumn;
+    @FXML private TableColumn<JournalAudit, String> auditOldValueColumn;
+    @FXML private TableColumn<JournalAudit, String> auditNewValueColumn;
+    @FXML private TableColumn<JournalAudit, String> auditIpColumn;
+    @FXML private TableColumn<JournalAudit, String> auditDateColumn;
+
+    @FXML private TextField searchAuditField;
+    @FXML private ComboBox<String> filterAuditActionCombo;
+    @FXML private ComboBox<String> filterAuditEntityCombo;
+    @FXML private DatePicker auditStartDatePicker;
+    @FXML private DatePicker auditEndDatePicker;
+    @FXML private Button btnSearchAudit;
+    @FXML private Button btnClearAudit;
+    @FXML private Button btnExportAudit;
+    @FXML private Button refreshAuditButton;
+    @FXML private Label auditStatsLabel;
+
 
     // Onglet Statistiques
     @FXML private Label totalUsersLabel;
@@ -174,8 +200,6 @@ public class AdminDashboardController {
     @FXML private Label paidCommissionsLabel;
     @FXML private Label cancelledCommissionsLabel;
     @FXML private Button refreshStatsButton;
-    @FXML private Button exportStatsExcelButton;
-    @FXML private Button exportStatsPDFButton;
     @FXML private Button generateReportButton;
     @FXML private Label dateLabel;
     @FXML private Button dashboardButton;
@@ -211,6 +235,7 @@ public class AdminDashboardController {
             initTransactionsTab();
             initPortefeuillesTab();
             initCommissionsTab();
+            initAuditTab();
             
             // Charger les données initiales
             chargerUtilisateurs();
@@ -227,6 +252,84 @@ public class AdminDashboardController {
         }
     }
 
+
+    @FXML
+    private void handleExportPDF() {
+        try {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Exporter les transactions en PDF");
+            fileChooser.setInitialFileName("transactions_admin_" + System.currentTimeMillis() + ".pdf");
+            fileChooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("PDF Files", "*.pdf")
+            );
+            
+            File file = fileChooser.showSaveDialog(logoutButton.getScene().getWindow());
+            
+            if (file != null) {
+                // Récupérer toutes les transactions filtrées ou non
+                List<Transaction> transactions;
+                if (transactionsTable != null && transactionsTable.getItems() != null && !transactionsTable.getItems().isEmpty()) {
+                    // Utiliser les transactions filtrées dans le tableau
+                    transactions = transactionsTable.getItems();
+                } else {
+                    // Charger toutes les transactions
+                    transactions = transactionDAO.findAll();
+                }
+                
+                boolean success = PDFExporter.exportTransactionsToPDF(
+                    transactions, 
+                    file.getAbsolutePath(),
+                    "Rapport Administratif - Toutes les Transactions"
+                );
+                
+                if (success) {
+                    afficherInfo("Succès", "PDF exporté avec succès !\n\nChemin: " + file.getAbsolutePath());
+                } else {
+                    afficherErreur("Erreur", "Erreur lors de l'exportation.");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            afficherErreur("Erreur", "Une erreur est survenue : " + e.getMessage());
+        }
+    }
+
+    private void exportTransactionReceipt(Transaction transaction) {
+        try {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Exporter le reçu de transaction");
+            fileChooser.setInitialFileName("reçu_" + (transaction.getNumeroTransaction() != null ? transaction.getNumeroTransaction() : "transaction") + ".pdf");
+            fileChooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("PDF Files", "*.pdf")
+            );
+            
+            File file = fileChooser.showSaveDialog(logoutButton.getScene().getWindow());
+            
+            if (file != null) {
+                // Trouver l'utilisateur concerné
+                Utilisateur utilisateur = null;
+                Portefeuille portefeuille = PortefeuilleDAO.findById(transaction.getPortefeuilleId());
+                if (portefeuille != null) {
+                    utilisateur = UtilisateurDAO.findById(portefeuille.getUtilisateurId());
+                }
+                
+                boolean success = PDFExporter.exportTransactionReceipt(
+                    transaction, 
+                    utilisateur, 
+                    file.getAbsolutePath()
+                );
+                
+                if (success) {
+                    afficherInfo("Succès", "Reçu exporté avec succès !");
+                } else {
+                    afficherErreur("Erreur", "Erreur lors de l'exportation du reçu.");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            afficherErreur("Erreur", "Erreur lors de l'exportation : " + e.getMessage());
+        }
+    }
 
     
     // Méthode pour mettre à jour la date
@@ -366,6 +469,8 @@ public class AdminDashboardController {
     private void handleNotifications() {
         showNotificationsInterface();
     }
+
+    @SuppressWarnings("unchecked")
 
     private void showNotificationsInterface() {
         // Créer une nouvelle fenêtre/dialogue pour les notifications
@@ -672,13 +777,7 @@ public class AdminDashboardController {
                 refreshUsersButton.setOnAction(event -> handleRefreshUsers());
             }
             
-            if (exportExcelButton != null) {
-                exportExcelButton.setOnAction(event -> handleExportUsersExcel());
-            }
-            
-            if (exportPDFButton != null) {
-                exportPDFButton.setOnAction(event -> handleExportUsersPDF());
-            }
+           
             
             // Initialiser la recherche avancée
             initRechercheAvancee();
@@ -735,7 +834,7 @@ public class AdminDashboardController {
             agentColumn.setCellValueFactory(cellData -> {
                 int agentId = cellData.getValue().getAgentId();
                 if (agentId > 0) {
-                    Utilisateur agent = utilisateurDAO.findById(agentId);
+                    Utilisateur agent = UtilisateurDAO.findById(agentId);
                     if (agent != null) {
                         return new SimpleStringProperty(agent.getPrenom() + " " + agent.getNom());
                     }
@@ -747,6 +846,44 @@ public class AdminDashboardController {
             if (refreshTransactionsButton != null) {
                 refreshTransactionsButton.setOnAction(event -> handleRefreshTransactions());
             }
+            
+            // Colonne Reçu PDF
+            TableColumn<Transaction, Void> receiptColumn = new TableColumn<>("Reçu");
+            receiptColumn.setPrefWidth(80);
+            receiptColumn.setCellFactory(param -> new TableCell<Transaction, Void>() {
+                private final Button receiptBtn = new Button("📄 PDF");
+                
+                {
+                    receiptBtn.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-padding: 5 10; -fx-font-size: 12px;");
+                    receiptBtn.setOnAction(e -> {
+                        Transaction transaction = getTableView().getItems().get(getIndex());
+                        exportTransactionReceipt(transaction);
+                    });
+                    
+                    // Effet hover
+                    receiptBtn.setOnMouseEntered(mouseEvent -> receiptBtn.setStyle(
+                        "-fx-background-color: #2980b9; -fx-text-fill: white; -fx-padding: 5 10; -fx-font-size: 12px; -fx-cursor: hand;"
+                    ));
+                    receiptBtn.setOnMouseExited(mouseEvent -> receiptBtn.setStyle(
+                        "-fx-background-color: #3498db; -fx-text-fill: white; -fx-padding: 5 10; -fx-font-size: 12px;"
+                    ));
+                }
+                
+                @Override
+                protected void updateItem(Void item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty) {
+                        setGraphic(null);
+                    } else {
+                        HBox hbox = new HBox(receiptBtn);
+                        hbox.setAlignment(Pos.CENTER);
+                        setGraphic(hbox);
+                    }
+                }
+            });
+            
+            // Ajouter la colonne Reçu à la table
+            transactionsTable.getColumns().add(receiptColumn);
             
             // Initialiser les filtres
             initTransactionsFilters();
@@ -780,9 +917,12 @@ public class AdminDashboardController {
             btnClearTransactions.setOnAction(e -> clearTransactionFilters());
         }
         
-        if (exportTransactionsButton != null) {
-            exportTransactionsButton.setOnAction(e -> handleExportTransactions());
-        }
+        // Ajouter le bouton d'export PDF
+        Button exportPdfButton = new Button("📊 Exporter PDF");
+        exportPdfButton.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 16;");
+        exportPdfButton.setOnAction(e -> handleExportPDF());
+        
+  
     }
     
     private void filterTransactions() {
@@ -859,7 +999,7 @@ public class AdminDashboardController {
             // Colonne client
             clientColumn.setCellValueFactory(cellData -> {
                 int userId = cellData.getValue().getUtilisateurId();
-                Utilisateur user = utilisateurDAO.findById(userId);
+                Utilisateur user = UtilisateurDAO.findById(userId);
                 if (user != null) {
                     return new SimpleStringProperty(
                         user.getPrenom() + " " + user.getNom() + " (" + user.getEmail() + ")");
@@ -1049,9 +1189,7 @@ public class AdminDashboardController {
             btnClearWallets.setOnAction(e -> clearWalletFilters());
         }
         
-        if (exportWalletsButton != null) {
-            exportWalletsButton.setOnAction(e -> handleExportWallets());
-        }
+       
     }
     
     private void filterWallets() {
@@ -1209,9 +1347,6 @@ public class AdminDashboardController {
                 annulerCommissionButton.setOnAction(event -> handleAnnulerCommission());
             }
             
-            if (exporterCommissionsButton != null) {
-                exporterCommissionsButton.setOnAction(event -> handleExporterCommissions());
-            }
             
             // Initialiser les filtres
             initCommissionsFilters();
@@ -1457,15 +1592,7 @@ public class AdminDashboardController {
         chargerUtilisateurs();
     }
     
-    @FXML
-    private void handleExportUsersExcel() {
-        exporterUtilisateursExcel();
-    }
     
-    @FXML
-    private void handleExportUsersPDF() {
-        exporterUtilisateursPDF();
-    }
     
     @FXML
     private void handleRefreshTransactions() {
@@ -1503,255 +1630,11 @@ public class AdminDashboardController {
     }
     
     @FXML
-    private void handleExporterCommissions() {
-        exporterCommissions();
-    }
-    
-    @FXML
     private void handleRefreshStats() {
         chargerStatistiques();
     }
     
-    // Méthodes d'export PDF
-    @FXML
-    private void handleExportTransactions() {
-        try {
-            List<Transaction> transactions;
-            
-            // Vérifier si des filtres sont appliqués
-            if (!searchTransactionField.getText().isEmpty() || 
-                !"TOUS".equals(typeFilterCombo.getValue()) ||
-                !"TOUS".equals(filterTransactionStatusCombo.getValue()) ||
-                startDatePicker.getValue() != null ||
-                endDatePicker.getValue() != null) {
-                
-                // Utiliser les transactions filtrées
-                Map<String, Object> filters = new HashMap<>();
-                if (!searchTransactionField.getText().isEmpty()) {
-                    filters.put("search", searchTransactionField.getText());
-                }
-                if (!"TOUS".equals(typeFilterCombo.getValue())) {
-                    filters.put("type", typeFilterCombo.getValue());
-                }
-                if (!"TOUS".equals(filterTransactionStatusCombo.getValue())) {
-                    filters.put("statut", filterTransactionStatusCombo.getValue());
-                }
-                if (startDatePicker.getValue() != null) {
-                    filters.put("start_date", startDatePicker.getValue().atStartOfDay());
-                }
-                if (endDatePicker.getValue() != null) {
-                    filters.put("end_date", endDatePicker.getValue().atTime(23, 59, 59));
-                }
-                
-                transactions = transactionDAO.findWithFilters(filters);
-            } else {
-                // Utiliser toutes les transactions
-                transactions = transactionDAO.findAll();
-            }
-            
-            if (transactions.isEmpty()) {
-                afficherErreur("Erreur", "Aucune transaction à exporter");
-                return;
-            }
-            
-            DirectoryChooser directoryChooser = new DirectoryChooser();
-            directoryChooser.setTitle("Choisir le dossier de sauvegarde");
-            File selectedDirectory = directoryChooser.showDialog(null);
-            
-            if (selectedDirectory != null) {
-                String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-                String fileName = "transactions_" + timestamp + ".pdf";
-                String filePath = selectedDirectory.getAbsolutePath() + File.separator + fileName;
-                
-                // Préparer les données pour l'export
-                List<Map<String, Object>> data = new ArrayList<>();
-                double totalAmount = 0;
-                
-                for (Transaction t : transactions) {
-                    Map<String, Object> row = new HashMap<>();
-                    row.put("ID", t.getNumeroTransaction());
-                    row.put("Type", t.getType());
-                    row.put("Montant", String.format("%,.0f GNF", t.getMontant()));
-                    row.put("Description", t.getDescription() != null ? t.getDescription() : "");
-                    row.put("Date", t.getDateTransaction() != null ? 
-                        t.getDateTransaction().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) : "");
-                    
-                    // Récupérer l'agent
-                    String agentName = "Système";
-                    if (t.getAgentId() > 0) {
-                        Utilisateur agent = utilisateurDAO.findById(t.getAgentId());
-                        if (agent != null) {
-                            agentName = agent.getPrenom() + " " + agent.getNom();
-                        }
-                    }
-                    row.put("Agent", agentName);
-                    
-                    data.add(row);
-                    totalAmount += t.getMontant();
-                }
-                
-                // Informations supplémentaires
-                Map<String, Object> extraInfo = new HashMap<>();
-                extraInfo.put("Nombre de transactions", transactions.size());
-                extraInfo.put("Montant total", String.format("%,.0f GNF", totalAmount));
-                extraInfo.put("Date d'export", LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
-                extraInfo.put("Exporté par", utilisateur.getPrenom() + " " + utilisateur.getNom());
-                
-                // Exporter en PDF
-                boolean success = ExportUtil.exportToPdf(
-                    data, 
-                    filePath, 
-                    "Rapport des Transactions",
-                    "Liste détaillée des transactions",
-                    extraInfo
-                );
-                
-                if (success) {
-                    afficherInfo("Export réussi", 
-                        "Rapport PDF créé avec succès !\n\n" +
-                        "Chemin: " + filePath + "\n" +
-                        "Nombre de transactions: " + transactions.size() + "\n" +
-                        "Montant total: " + String.format("%,.0f GNF", totalAmount));
-                } else {
-                    afficherErreur("Erreur", "Échec de l'export PDF");
-                }
-            }
-        } catch (Exception e) {
-            afficherErreur("Erreur", "Export échoué: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
     
-    @FXML
-    private void handleExportWallets() {
-        try {
-            List<Portefeuille> wallets;
-            
-            // Vérifier si des filtres sont appliqués
-            if (!searchWalletField.getText().isEmpty() || 
-                !searchWalletClientField.getText().isEmpty() ||
-                !"TOUS".equals(filterWalletStatusCombo.getValue()) ||
-                !filterMinBalanceField.getText().isEmpty() ||
-                !filterMaxBalanceField.getText().isEmpty()) {
-                
-                // Utiliser les portefeuilles filtrés
-                Map<String, Object> filters = new HashMap<>();
-                if (!searchWalletField.getText().isEmpty()) {
-                    filters.put("search_wallet", searchWalletField.getText());
-                }
-                if (!searchWalletClientField.getText().isEmpty()) {
-                    filters.put("search_client", searchWalletClientField.getText());
-                }
-                if (!"TOUS".equals(filterWalletStatusCombo.getValue())) {
-                    filters.put("statut", filterWalletStatusCombo.getValue());
-                }
-                if (!filterMinBalanceField.getText().isEmpty()) {
-                    try {
-                        filters.put("min_balance", Double.parseDouble(filterMinBalanceField.getText()));
-                    } catch (NumberFormatException e) {
-                        // Ignorer
-                    }
-                }
-                if (!filterMaxBalanceField.getText().isEmpty()) {
-                    try {
-                        filters.put("max_balance", Double.parseDouble(filterMaxBalanceField.getText()));
-                    } catch (NumberFormatException e) {
-                        // Ignorer
-                    }
-                }
-                
-                wallets = portefeuilleDAO.findWithFilters(filters);
-            } else {
-                // Utiliser tous les portefeuilles
-                wallets = portefeuilleDAO.findAll();
-            }
-            
-            if (wallets.isEmpty()) {
-                afficherErreur("Erreur", "Aucun portefeuille à exporter");
-                return;
-            }
-            
-            DirectoryChooser directoryChooser = new DirectoryChooser();
-            directoryChooser.setTitle("Choisir le dossier de sauvegarde");
-            File selectedDirectory = directoryChooser.showDialog(null);
-            
-            if (selectedDirectory != null) {
-                String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-                String fileName = "portefeuilles_" + timestamp + ".pdf";
-                String filePath = selectedDirectory.getAbsolutePath() + File.separator + fileName;
-                
-                // Préparer les données pour l'export
-                List<Map<String, Object>> data = new ArrayList<>();
-                double totalBalance = 0;
-                int activeCount = 0;
-                int blockedCount = 0;
-                
-                for (Portefeuille w : wallets) {
-                    Map<String, Object> row = new HashMap<>();
-                    row.put("Numéro", w.getNumeroPortefeuille());
-                    row.put("Solde", String.format("%,.0f GNF", w.getSolde()));
-                    row.put("Statut", w.getStatut());
-                    row.put("Limite retrait", String.format("%,.0f GNF", w.getLimiteRetraitQuotidien()));
-                    row.put("Limite transfert", String.format("%,.0f GNF", w.getLimiteTransfert()));
-                    
-                    // Récupérer le client
-                    Utilisateur client = utilisateurDAO.findById(w.getUtilisateurId());
-                    String clientInfo = "Inconnu";
-                    if (client != null) {
-                        clientInfo = client.getPrenom() + " " + client.getNom() + " (" + client.getEmail() + ")";
-                    }
-                    row.put("Client", clientInfo);
-                    
-                    row.put("Date création", w.getDateCreation() != null ? 
-                        w.getDateCreation().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "");
-                    
-                    data.add(row);
-                    totalBalance += w.getSolde();
-                    
-                    if ("ACTIF".equals(w.getStatut())) {
-                        activeCount++;
-                    } else if ("BLOQUE".equals(w.getStatut())) {
-                        blockedCount++;
-                    }
-                }
-                
-                // Informations supplémentaires
-                Map<String, Object> extraInfo = new HashMap<>();
-                extraInfo.put("Nombre de portefeuilles", wallets.size());
-                extraInfo.put("Portefeuilles actifs", activeCount);
-                extraInfo.put("Portefeuilles bloqués", blockedCount);
-                extraInfo.put("Solde total", String.format("%,.0f GNF", totalBalance));
-                extraInfo.put("Date d'export", LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
-                extraInfo.put("Exporté par", utilisateur.getPrenom() + " " + utilisateur.getNom());
-                
-                // Exporter en PDF
-                boolean success = ExportUtil.exportToPdf(
-                    data, 
-                    filePath, 
-                    "Rapport des Portefeuilles",
-                    "Liste détaillée des portefeuilles",
-                    extraInfo
-                );
-                
-                if (success) {
-                    afficherInfo("Export réussi", 
-                        "Rapport PDF créé avec succès !\n\n" +
-                        "Chemin: " + filePath + "\n" +
-                        "Nombre de portefeuilles: " + wallets.size() + "\n" +
-                        "Solde total: " + String.format("%,.0f GNF", totalBalance));
-                } else {
-                    afficherErreur("Erreur", "Échec de l'export PDF");
-                }
-            }
-        } catch (Exception e) {
-            afficherErreur("Erreur", "Export échoué: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-    
-    // Suppression des méthodes inutilisées pour l'export PDF des statistiques
-    // Les méthodes handleExportStatsExcel() et handleExportStatsPDF() seront supprimées
-    // car elles ne sont pas implémentées
     
     private void chargerUtilisateurs() {
         try {
@@ -2088,7 +1971,9 @@ public class AdminDashboardController {
         
         afficherInfo("Détails Utilisateur", details);
     }
-    
+
+    @SuppressWarnings("unchecked")
+
     private void editUser(Utilisateur user) {
         // Créer un dialogue d'édition avec onglets
         Stage dialog = new Stage();
@@ -2369,7 +2254,7 @@ public class AdminDashboardController {
     }
     
     private void showWalletDetails(Portefeuille wallet) {
-        Utilisateur user = utilisateurDAO.findById(wallet.getUtilisateurId());
+        Utilisateur user = UtilisateurDAO.findById(wallet.getUtilisateurId());
         String userInfo = (user != null) ? user.getPrenom() + " " + user.getNom() + " (" + user.getEmail() + ")" : "Inconnu";
         
         String details = String.format(
@@ -2560,229 +2445,6 @@ public class AdminDashboardController {
         });
     }
     
-    // Méthodes d'export
-    private void exporterUtilisateursExcel() {
-        try {
-            DirectoryChooser directoryChooser = new DirectoryChooser();
-            directoryChooser.setTitle("Choisir le dossier de sauvegarde");
-            File selectedDirectory = directoryChooser.showDialog(null);
-            
-            if (selectedDirectory != null) {
-                String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-                String filePath = selectedDirectory.getAbsolutePath() + File.separator + "utilisateurs_" + timestamp + ".csv";
-                
-                List<Map<String, Object>> data = new ArrayList<>();
-                List<Utilisateur> utilisateurs = utilisateurDAO.findAll();
-                
-                for (Utilisateur user : utilisateurs) {
-                    Map<String, Object> row = new HashMap<>();
-                    row.put("ID", user.getUtilisateurId());
-                    row.put("Nom", user.getNom());
-                    row.put("Prénom", user.getPrenom());
-                    row.put("Email", user.getEmail());
-                    row.put("Téléphone", user.getTelephone() != null ? user.getTelephone() : "");
-                    row.put("Rôle", user.getRoleName());
-                    row.put("Statut", user.getStatut() != null ? user.getStatut().name() : "INACTIF");
-                    data.add(row);
-                }
-                
-                if (!data.isEmpty()) {
-                    boolean success = ExportUtil.exportToCsv(data, filePath, "Utilisateurs");
-                    if (success) {
-                        afficherInfo("Export réussi", 
-                            "Fichier créé avec succès !\n\n" +
-                            "Chemin: " + filePath + "\n\n" +
-                            "Le fichier CSV peut être ouvert avec :\n" +
-                            "• Microsoft Excel\n" +
-                            "• LibreOffice Calc\n" +
-                            "• Google Sheets\n" +
-                            "• Bloc-notes");
-                    }
-                }
-            }
-        } catch (Exception e) {
-            afficherErreur("Erreur", "Export échoué: " + e.getMessage());
-        }
-    }
-
-    private void exporterUtilisateursPDF() {
-        try {
-            DirectoryChooser directoryChooser = new DirectoryChooser();
-            directoryChooser.setTitle("Choisir le dossier de sauvegarde");
-            File selectedDirectory = directoryChooser.showDialog(null);
-            
-            if (selectedDirectory != null) {
-                String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-                String fileName = "utilisateurs_" + timestamp + ".pdf";
-                String filePath = selectedDirectory.getAbsolutePath() + File.separator + fileName;
-                
-                List<Map<String, Object>> data = new ArrayList<>();
-                List<Utilisateur> utilisateurs = utilisateurDAO.findAll();
-                
-                for (Utilisateur user : utilisateurs) {
-                    Map<String, Object> row = new HashMap<>();
-                    row.put("ID", user.getUtilisateurId());
-                    row.put("Nom", user.getNom());
-                    row.put("Prénom", user.getPrenom());
-                    row.put("Email", user.getEmail());
-                    row.put("Téléphone", user.getTelephone() != null ? user.getTelephone() : "");
-                    row.put("Rôle", user.getRoleName());
-                    row.put("Statut", user.getStatut() != null ? user.getStatut().name() : "INACTIF");
-                    data.add(row);
-                }
-                
-                if (!data.isEmpty()) {
-                    // Informations supplémentaires
-                    Map<String, Object> extraInfo = new HashMap<>();
-                    extraInfo.put("Nombre d'utilisateurs", utilisateurs.size());
-                    
-                    // Compter par rôle
-                    int admins = 0, agents = 0, clients = 0;
-                    for (Utilisateur user : utilisateurs) {
-                        String role = user.getRoleName();
-                        if ("ADMIN".equals(role)) admins++;
-                        else if ("AGENT".equals(role)) agents++;
-                        else if ("USER".equals(role)) clients++;
-                    }
-                    extraInfo.put("Administrateurs", admins);
-                    extraInfo.put("Agents", agents);
-                    extraInfo.put("Clients", clients);
-                    
-                    extraInfo.put("Date d'export", LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
-                    extraInfo.put("Exporté par", utilisateur.getPrenom() + " " + utilisateur.getNom());
-                    
-                    // Exporter en PDF
-                    boolean success = ExportUtil.exportToPdf(
-                        data, 
-                        filePath, 
-                        "Rapport des Utilisateurs",
-                        "Liste détaillée des utilisateurs",
-                        extraInfo
-                    );
-                    
-                    if (success) {
-                        afficherInfo("Export réussi", 
-                            "Rapport PDF créé avec succès !\n\n" +
-                            "Chemin: " + filePath + "\n" +
-                            "Nombre d'utilisateurs: " + utilisateurs.size());
-                    } else {
-                        afficherErreur("Erreur", "Échec de l'export PDF");
-                    }
-                }
-            }
-        } catch (Exception e) {
-            afficherErreur("Erreur", "Export échoué: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
-    private void exporterCommissions() {
-        try {
-            List<Commission> commissions;
-            
-            // Vérifier si des filtres sont appliqués
-            if (!"TOUS".equals(statutFilterCombo.getValue()) || 
-                !"TOUS".equals(agentFilterCombo.getValue()) ||
-                commissionStartDatePicker.getValue() != null ||
-                commissionEndDatePicker.getValue() != null) {
-                
-                // Utiliser les commissions filtrées
-                Map<String, Object> filters = new HashMap<>();
-                if (!"TOUS".equals(statutFilterCombo.getValue())) {
-                    filters.put("statut", statutFilterCombo.getValue());
-                }
-                if (!"TOUS".equals(agentFilterCombo.getValue())) {
-                    try {
-                        filters.put("agent_id", Integer.parseInt(agentFilterCombo.getValue()));
-                    } catch (NumberFormatException e) {
-                        // Ignorer
-                    }
-                }
-                if (commissionStartDatePicker.getValue() != null) {
-                    filters.put("start_date", commissionStartDatePicker.getValue().atStartOfDay());
-                }
-                if (commissionEndDatePicker.getValue() != null) {
-                    filters.put("end_date", commissionEndDatePicker.getValue().atTime(23, 59, 59));
-                }
-                
-                commissions = commissionDAO.findWithFilters(filters);
-            } else {
-                // Utiliser toutes les commissions
-                commissions = commissionDAO.findAll();
-            }
-            
-            if (commissions.isEmpty()) {
-                afficherErreur("Erreur", "Aucune commission à exporter");
-                return;
-            }
-            
-            DirectoryChooser directoryChooser = new DirectoryChooser();
-            directoryChooser.setTitle("Choisir le dossier de sauvegarde");
-            File selectedDirectory = directoryChooser.showDialog(null);
-            
-            if (selectedDirectory != null) {
-                String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-                String fileName = "commissions_" + timestamp + ".pdf";
-                String filePath = selectedDirectory.getAbsolutePath() + File.separator + fileName;
-                
-                // Préparer les données pour l'export
-                List<Map<String, Object>> data = new ArrayList<>();
-                double totalAmount = 0;
-                int pendingCount = 0, paidCount = 0, cancelledCount = 0;
-                
-                for (Commission c : commissions) {
-                    Map<String, Object> row = new HashMap<>();
-                    row.put("ID", c.getId());
-                    row.put("Agent", c.getAgentComplet());
-                    row.put("Montant", String.format("%,.0f GNF", c.getMontantCommission()));
-                    row.put("Pourcentage", c.getPourcentageFormatted());
-                    row.put("Statut", c.getStatut());
-                    row.put("Date", c.getDateFormatted());
-                    
-                    data.add(row);
-                    totalAmount += c.getMontantCommission();
-                    
-                    String status = c.getStatut();
-                    if ("PENDING".equals(status)) pendingCount++;
-                    else if ("PAID".equals(status)) paidCount++;
-                    else if ("CANCELLED".equals(status)) cancelledCount++;
-                }
-                
-                // Informations supplémentaires
-                Map<String, Object> extraInfo = new HashMap<>();
-                extraInfo.put("Nombre de commissions", commissions.size());
-                extraInfo.put("En attente", pendingCount);
-                extraInfo.put("Payées", paidCount);
-                extraInfo.put("Annulées", cancelledCount);
-                extraInfo.put("Montant total", String.format("%,.0f GNF", totalAmount));
-                extraInfo.put("Date d'export", LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
-                extraInfo.put("Exporté par", utilisateur.getPrenom() + " " + utilisateur.getNom());
-                
-                // Exporter en PDF
-                boolean success = ExportUtil.exportToPdf(
-                    data, 
-                    filePath, 
-                    "Rapport des Commissions",
-                    "Liste détaillée des commissions",
-                    extraInfo
-                );
-                
-                if (success) {
-                    afficherInfo("Export réussi", 
-                        "Rapport PDF créé avec succès !\n\n" +
-                        "Chemin: " + filePath + "\n" +
-                        "Nombre de commissions: " + commissions.size() + "\n" +
-                        "Montant total: " + String.format("%,.0f GNF", totalAmount));
-                } else {
-                    afficherErreur("Erreur", "Échec de l'export PDF");
-                }
-            }
-        } catch (Exception e) {
-            afficherErreur("Erreur", "Export échoué: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
     @FXML
     private void handleGenerateReport() {
         // Créer un dialogue pour choisir le type de rapport
@@ -2900,5 +2562,203 @@ public class AdminDashboardController {
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+
+    private void initAuditTab() {
+        if (auditTable != null) {
+            // Configurer les colonnes
+            auditIdColumn.setCellValueFactory(new PropertyValueFactory<>("journalId"));
+            
+            // Colonne utilisateur
+            auditUserColumn.setCellValueFactory(cellData -> {
+                int userId = cellData.getValue().getUtilisateurId();
+                Utilisateur user = UtilisateurDAO.findById(userId);
+                if (user != null) {
+                    return new SimpleStringProperty(user.getPrenom() + " " + user.getNom());
+                }
+                return new SimpleStringProperty("ID: " + userId);
+            });
+            
+            auditActionColumn.setCellValueFactory(new PropertyValueFactory<>("action"));
+            auditEntityColumn.setCellValueFactory(new PropertyValueFactory<>("entite"));
+            auditEntityIdColumn.setCellValueFactory(new PropertyValueFactory<>("entiteId"));
+            auditOldValueColumn.setCellValueFactory(new PropertyValueFactory<>("ancienneValeur"));
+            auditNewValueColumn.setCellValueFactory(new PropertyValueFactory<>("nouvelleValeur"));
+            auditIpColumn.setCellValueFactory(new PropertyValueFactory<>("adresseIp"));
+            
+            // Colonne date formatée
+            auditDateColumn.setCellValueFactory(cellData -> {
+                LocalDateTime date = cellData.getValue().getDateAction();
+                if (date != null) {
+                    return new SimpleStringProperty(
+                        date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"))
+                    );
+                }
+                return new SimpleStringProperty("");
+            });
+            
+            // Initialiser les filtres
+            initAuditFilters();
+            
+            // Charger les données initiales
+            chargerAuditLogs();
+            
+            // Configurer le bouton rafraîchir
+            if (refreshAuditButton != null) {
+                refreshAuditButton.setOnAction(event -> chargerAuditLogs());
+            }
+            
+            // Configurer le bouton export
+            if (btnExportAudit != null) {
+                btnExportAudit.setOnAction(event -> exportAuditToPDF());
+            }
+        }
+    }
+
+    private void initAuditFilters() {
+        if (filterAuditActionCombo != null) {
+            filterAuditActionCombo.getItems().addAll("TOUS", "CREATE", "UPDATE", "DELETE", "LOGIN", "LOGOUT");
+            filterAuditActionCombo.setValue("TOUS");
+        }
+        
+        if (filterAuditEntityCombo != null) {
+            filterAuditEntityCombo.getItems().addAll("TOUS", "UTILISATEUR", "PORTEFEUILLE", "TRANSACTION", "COMMISSION");
+            filterAuditEntityCombo.setValue("TOUS");
+        }
+        
+        if (auditStartDatePicker != null) {
+            auditStartDatePicker.setValue(LocalDate.now().minusDays(7));
+        }
+        
+        if (auditEndDatePicker != null) {
+            auditEndDatePicker.setValue(LocalDate.now());
+        }
+        
+        if (btnSearchAudit != null) {
+            btnSearchAudit.setOnAction(e -> filterAuditLogs());
+        }
+        
+        if (btnClearAudit != null) {
+            btnClearAudit.setOnAction(e -> clearAuditFilters());
+        }
+    }
+
+    private void chargerAuditLogs() {
+        try {
+            List<JournalAudit> logs = journalAuditDAO.findAllRecent(100);
+            ObservableList<JournalAudit> observableList = FXCollections.observableArrayList(logs);
+            auditTable.setItems(observableList);
+            
+            // Mettre à jour les statistiques
+            if (auditStatsLabel != null) {
+                auditStatsLabel.setText(logs.size() + " logs d'audit");
+            }
+            
+            System.out.println("[INFO] " + logs.size() + " logs d'audit chargés");
+        } catch (Exception e) {
+            System.err.println("[ERREUR] Impossible de charger les logs d'audit: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private void filterAuditLogs() {
+        String searchText = searchAuditField.getText().trim();
+        String actionFilter = filterAuditActionCombo.getValue();
+        String entityFilter = filterAuditEntityCombo.getValue();
+        LocalDateTime startDate = auditStartDatePicker.getValue() != null ? 
+            auditStartDatePicker.getValue().atStartOfDay() : null;
+        LocalDateTime endDate = auditEndDatePicker.getValue() != null ? 
+            auditEndDatePicker.getValue().atTime(23, 59, 59) : null;
+        
+        List<JournalAudit> filteredLogs;
+        
+        if (startDate != null && endDate != null) {
+            // Filtrer par date
+            filteredLogs = journalAuditDAO.findByDateRange(
+                Timestamp.valueOf(startDate), 
+                Timestamp.valueOf(endDate)
+            );
+        } else if (searchText != null && !searchText.isEmpty()) {
+            // Recherche par action
+            filteredLogs = journalAuditDAO.findByAction(searchText);
+        } else {
+            // Tout charger
+            filteredLogs = journalAuditDAO.findAllRecent(100);
+        }
+        
+        // Appliquer les filtres supplémentaires
+        List<JournalAudit> finalLogs = new ArrayList<>();
+        for (JournalAudit log : filteredLogs) {
+            boolean matches = true;
+            
+            if (!"TOUS".equals(actionFilter) && !actionFilter.equals(log.getAction())) {
+                matches = false;
+            }
+            
+            if (!"TOUS".equals(entityFilter) && !entityFilter.equals(log.getEntite())) {
+                matches = false;
+            }
+            
+            if (matches) {
+                finalLogs.add(log);
+            }
+        }
+        
+        ObservableList<JournalAudit> observableList = FXCollections.observableArrayList(finalLogs);
+        auditTable.setItems(observableList);
+        
+        // Mettre à jour les statistiques
+        if (auditStatsLabel != null) {
+            auditStatsLabel.setText(finalLogs.size() + " logs d'audit filtrés");
+        }
+    }
+
+    private void clearAuditFilters() {
+        searchAuditField.clear();
+        filterAuditActionCombo.setValue("TOUS");
+        filterAuditEntityCombo.setValue("TOUS");
+        auditStartDatePicker.setValue(LocalDate.now().minusDays(7));
+        auditEndDatePicker.setValue(LocalDate.now());
+        
+        chargerAuditLogs();
+    }
+
+    private void exportAuditToPDF() {
+        try {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Exporter le journal d'audit");
+            fileChooser.setInitialFileName("audit_report_" + System.currentTimeMillis() + ".pdf");
+            fileChooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("PDF Files", "*.pdf")
+            );
+            
+            File file = fileChooser.showSaveDialog(auditTable.getScene().getWindow());
+            
+            if (file != null) {
+                // Récupérer les logs affichés
+                List<JournalAudit> logs;
+                if (auditTable.getItems() != null && !auditTable.getItems().isEmpty()) {
+                    logs = auditTable.getItems();
+                } else {
+                    logs = journalAuditDAO.findAllRecent(100);
+                }
+                
+                // Utiliser votre PDFExporter (vous devrez peut-être adapter cette méthode)
+                boolean success = PDFExporter.exportAuditToPDF(
+                    logs, 
+                    file.getAbsolutePath(),
+                    "Rapport d'Audit - " + LocalDate.now()
+                );
+                
+                if (success) {
+                    afficherInfo("Succès", "PDF exporté avec succès !\n\nChemin: " + file.getAbsolutePath());
+                } else {
+                    afficherErreur("Erreur", "Erreur lors de l'exportation.");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            afficherErreur("Erreur", "Une erreur est survenue : " + e.getMessage());
+        }
     }
 }

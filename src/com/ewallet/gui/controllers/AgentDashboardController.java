@@ -2,6 +2,8 @@ package com.ewallet.gui.controllers;
 
 import com.ewallet.core.models.Utilisateur;
 import com.ewallet.core.dao.CommissionDAO;
+import com.ewallet.core.dao.PortefeuilleDAO;
+import com.ewallet.core.dao.UtilisateurDAO;
 import com.ewallet.core.services.TransactionService;
 import com.ewallet.core.utils.SessionManager;
 import com.ewallet.gui.MainApp;
@@ -27,12 +29,15 @@ import javafx.geometry.Pos;
 import com.ewallet.core.services.NotificationService;
 import com.ewallet.core.services.ProfileService;
 import com.ewallet.core.models.Notification;
+import com.ewallet.core.models.Portefeuille;
 import com.ewallet.core.models.Transaction;
 import javafx.stage.Stage;
 import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.scene.Scene;
-
+import javafx.stage.FileChooser;
+import java.io.File;
+import com.ewallet.core.utils.PDFExporter;
 
 
 public class AgentDashboardController {
@@ -103,6 +108,10 @@ public class AgentDashboardController {
     private NotificationService notificationService;
     private int unreadNotificationCount = 0;
     private ProfileService profileService;
+    private String currentPeriodFilter = "Aujourd'hui";
+    private String currentTypeFilter = "Tous";
+    private String currentSearchFilter = "";
+    private TableView<Transaction> currentTransactionsTable;
     
     @FXML
     public void initialize() {
@@ -142,6 +151,248 @@ public class AgentDashboardController {
             navigateToLogin();
         }
     }
+
+
+
+    @FXML
+    private void handleExportPDF() {
+        try {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Exporter mon rapport d'activité");
+            
+            // Créer un nom de fichier basé sur les filtres actuels
+            String fileName = "rapport_agent_" + currentUser.getPrenom().toLowerCase();
+            
+            if (!"Aujourd'hui".equals(currentPeriodFilter)) {
+                fileName += "_" + currentPeriodFilter.replace(" ", "_").toLowerCase();
+            }
+            if (!"Tous".equals(currentTypeFilter)) {
+                fileName += "_" + currentTypeFilter.toLowerCase();
+            }
+            if (!currentSearchFilter.isEmpty()) {
+                fileName += "_recherche";
+            }
+            fileName += "_" + System.currentTimeMillis() + ".pdf";
+            
+            fileChooser.setInitialFileName(fileName);
+            fileChooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("PDF Files", "*.pdf")
+            );
+            
+            File file = fileChooser.showSaveDialog(logoutButton.getScene().getWindow());
+            
+            if (file != null) {
+                List<Transaction> transactions = new ArrayList<>();
+                String reportTitle = "";
+                
+                // Option 1 : Exporter les transactions affichées dans la table actuelle
+                if (currentTransactionsTable != null && !currentTransactionsTable.getItems().isEmpty()) {
+                    transactions.addAll(currentTransactionsTable.getItems());
+                    reportTitle = buildReportTitleFromFilters();
+                } 
+                // Option 2 : Charger avec les mêmes filtres que l'interface
+                else {
+                    java.util.Date startDate = null;
+                    java.util.Date endDate = null;
+                    
+                    // Convertir le filtre période en dates
+                    switch (currentPeriodFilter) {
+                        case "Aujourd'hui":
+                            startDate = java.sql.Date.valueOf(java.time.LocalDate.now());
+                            endDate = startDate;
+                            break;
+                        case "7 derniers jours":
+                            startDate = java.sql.Date.valueOf(java.time.LocalDate.now().minusDays(7));
+                            endDate = java.sql.Date.valueOf(java.time.LocalDate.now());
+                            break;
+                        case "30 derniers jours":
+                            startDate = java.sql.Date.valueOf(java.time.LocalDate.now().minusDays(30));
+                            endDate = java.sql.Date.valueOf(java.time.LocalDate.now());
+                            break;
+                        default:
+                            // "Tous" ou autre - prendre les 90 derniers jours
+                            startDate = java.sql.Date.valueOf(java.time.LocalDate.now().minusDays(90));
+                            endDate = java.sql.Date.valueOf(java.time.LocalDate.now());
+                    }
+                    
+                    // Charger avec les mêmes filtres
+                    List<Transaction> allTransactions = transactionService.getTransactionsByAgent(
+                        currentUser.getUtilisateurId(), startDate, endDate
+                    );
+                    
+                    // Appliquer les mêmes filtres
+                    for (Transaction t : allTransactions) {
+                        if (!"Tous".equals(currentTypeFilter)) {
+                            if (currentTypeFilter.equals("Dépôt") && !"DEPOT".equalsIgnoreCase(t.getType())) {
+                                continue;
+                            }
+                            if (currentTypeFilter.equals("Retrait") && !"RETRAIT".equalsIgnoreCase(t.getType())) {
+                                continue;
+                            }
+                        }
+                        
+                        if (currentSearchFilter != null && !currentSearchFilter.isEmpty()) {
+                            String desc = t.getDescription().toLowerCase();
+                            if (!desc.contains(currentSearchFilter.toLowerCase())) {
+                                continue;
+                            }
+                        }
+                        
+                        transactions.add(t);
+                    }
+                    
+                    reportTitle = buildReportTitleFromFilters();
+                }
+                
+                // VÉRIFICATION CRITIQUE
+                if (transactions.isEmpty()) {
+                    showError("Aucune donnée", 
+                        "❌ Aucune transaction trouvée avec les filtres actuels.\n\n" +
+                        "Filtres appliqués :\n" +
+                        "• Période : " + currentPeriodFilter + "\n" +
+                        "• Type : " + currentTypeFilter + "\n" +
+                        (currentSearchFilter.isEmpty() ? "" : "• Recherche : " + currentSearchFilter + "\n") +
+                        "\nVeuillez ajuster vos filtres ou effectuer des opérations.");
+                    return;
+                }
+                
+                // Calculer les statistiques pour le rapport
+                double totalDeposits = transactions.stream()
+                    .filter(t -> "DEPOT".equalsIgnoreCase(t.getType()))
+                    .mapToDouble(Transaction::getMontant)
+                    .sum();
+                
+                double totalWithdrawals = transactions.stream()
+                    .filter(t -> "RETRAIT".equalsIgnoreCase(t.getType()))
+                    .mapToDouble(Transaction::getMontant)
+                    .sum();
+                
+                double totalAmount = Math.abs(totalDeposits) + Math.abs(totalWithdrawals);
+                
+                // Récupérer les commissions pour la période
+                double totalCommissions = transactions.stream()
+                    .mapToDouble(t -> Math.abs(t.getMontant()) * 0.01)
+                    .sum();
+                
+                // Préparer les données supplémentaires pour le PDF
+                Map<String, Object> additionalData = new HashMap<>();
+                additionalData.put("agentName", currentUser.getPrenom() + " " + currentUser.getNom());
+                additionalData.put("filters", 
+                    "Période: " + currentPeriodFilter + 
+                    " | Type: " + currentTypeFilter +
+                    (currentSearchFilter.isEmpty() ? "" : " | Recherche: " + currentSearchFilter));
+                additionalData.put("totalTransactions", transactions.size());
+                additionalData.put("totalDeposits", totalDeposits);
+                additionalData.put("totalWithdrawals", Math.abs(totalWithdrawals));
+                additionalData.put("totalAmount", totalAmount);
+                additionalData.put("totalCommissions", totalCommissions);
+                additionalData.put("generationDate", 
+                    java.time.LocalDateTime.now().format(
+                        java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")));
+                
+                // Utiliser exportTransactionsToPDF
+                boolean success = PDFExporter.exportTransactionsToPDF(
+                    transactions, 
+                    file.getAbsolutePath(),
+                    reportTitle
+                );
+                
+                if (success) {
+                    String message = String.format(
+                        "✅ Rapport PDF exporté avec succès !\n\n" +
+                        "📋 **Détails de l'export :**\n" +
+                        "• Agent : %s %s\n" +
+                        "• Filtres appliqués :\n" +
+                        "  - Période : %s\n" +
+                        "  - Type : %s\n" +
+                        "  %s" +
+                        "• Transactions exportées : %d\n" +
+                        "• Montant total traité : %,.0f GNF\n" +
+                        "• Commissions estimées : %,.0f GNF\n" +
+                        "• Fichier : %s\n\n" +
+                        "📁 Le rapport a été enregistré avec succès.",
+                        currentUser.getPrenom(),
+                        currentUser.getNom(),
+                        currentPeriodFilter,
+                        currentTypeFilter,
+                        currentSearchFilter.isEmpty() ? "" : "  - Recherche : " + currentSearchFilter + "\n",
+                        transactions.size(),
+                        totalAmount,
+                        totalCommissions,
+                        file.getAbsolutePath()
+                    );
+                    showSuccess("Export réussi", message);
+                } else {
+                    showError("Erreur", "Erreur lors de l'exportation du PDF.");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            showError("Erreur", 
+                "❌ Une erreur est survenue :\n\n" + 
+                e.getMessage() + "\n\n" +
+                "Veuillez réessayer ou contacter le support.");
+        }
+    }
+
+    private String buildReportTitleFromFilters() {
+        String title = "Rapport Agent - " + currentUser.getPrenom() + " " + currentUser.getNom();
+        
+        if (!"Aujourd'hui".equals(currentPeriodFilter) || !"Tous".equals(currentTypeFilter)) {
+            title += " [Filtres : ";
+            if (!"Aujourd'hui".equals(currentPeriodFilter)) {
+                title += currentPeriodFilter;
+            }
+            if (!"Tous".equals(currentTypeFilter)) {
+                if (!"Aujourd'hui".equals(currentPeriodFilter)) title += " | ";
+                title += currentTypeFilter;
+            }
+            if (!currentSearchFilter.isEmpty()) {
+                title += " | Recherche: " + currentSearchFilter;
+            }
+            title += "]";
+        }
+        
+        return title;
+    }
+
+    private void exportTransactionReceipt(Transaction transaction) {
+        try {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Exporter le reçu de transaction");
+            fileChooser.setInitialFileName("reçu_" + (transaction.getNumeroTransaction() != null ? transaction.getNumeroTransaction() : "transaction") + ".pdf");
+            fileChooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("PDF Files", "*.pdf")
+            );
+            
+            File file = fileChooser.showSaveDialog(null);
+            
+            if (file != null) {
+                // Trouver l'utilisateur client
+                Utilisateur client = null;
+                Portefeuille portefeuille = PortefeuilleDAO.findById(transaction.getPortefeuilleId());
+                if (portefeuille != null) {
+                    client = UtilisateurDAO.findById(portefeuille.getUtilisateurId());
+                }
+                
+                boolean success = PDFExporter.exportTransactionReceipt(
+                    transaction, 
+                    client, 
+                    file.getAbsolutePath()
+                );
+                
+                if (success) {
+                    showSuccess("Succès", "Reçu exporté avec succès !");
+                } else {
+                    showError("Erreur", "Erreur lors de l'exportation du reçu.");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            showError("Erreur", "Erreur lors de l'exportation : " + e.getMessage());
+        }
+    }
+
     @FXML
     private void handleDashboard() {
         System.out.println("[AGENT] Bouton Dashboard cliqué");
@@ -267,6 +518,8 @@ public class AgentDashboardController {
     private static final double SCREEN_WIDTH = 900;
     private static final double SCREEN_HEIGHT = 700;
     
+    @SuppressWarnings("unchecked")
+
     private void showNotificationsInterface() {
         Stage notificationsStage = new Stage();
         notificationsStage.setTitle("🔔 Notifications Agent");
@@ -854,6 +1107,7 @@ public class AgentDashboardController {
         mainContent.getChildren().add(scrollPane);
     }
     
+    @SuppressWarnings("unchecked")
     private void showOperationsInterface() {
         System.out.println("[AGENT] Affichage interface opérations");
         mainContent.getChildren().clear();
@@ -861,9 +1115,9 @@ public class AgentDashboardController {
         VBox operationsBox = new VBox(20);
         operationsBox.setPadding(new Insets(30));
         operationsBox.setStyle("-fx-background-color: " + ColorScheme.CARD_BG + "; " +
-                             "-fx-border-color: " + ColorScheme.BORDER + "; " +
-                             "-fx-border-radius: 16; -fx-background-radius: 16; " +
-                             "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 15, 0.5, 0, 5);");
+                            "-fx-border-color: " + ColorScheme.BORDER + "; " +
+                            "-fx-border-radius: 16; -fx-background-radius: 16; " +
+                            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 15, 0.5, 0, 5);");
         
         // Header avec style de template
         HBox header = new HBox(15);
@@ -872,7 +1126,7 @@ public class AgentDashboardController {
         VBox titleBox = new VBox(5);
         Label title = new Label("📋 Historique de Mes Opérations");
         title.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-font-family: 'Inter'; " +
-                      "-fx-text-fill: " + ColorScheme.DARK + ";");
+                    "-fx-text-fill: " + ColorScheme.DARK + ";");
         
         Label subtitle = new Label("Suivez toutes vos transactions effectuées");
         subtitle.setStyle("-fx-font-size: 14px; -fx-font-family: 'Inter'; " +
@@ -909,7 +1163,7 @@ public class AgentDashboardController {
         VBox periodBox = new VBox(8);
         Label periodLabel = new Label("Période");
         periodLabel.setStyle("-fx-font-size: 13px; -fx-font-weight: 600; -fx-font-family: 'Inter'; " +
-                           "-fx-text-fill: " + ColorScheme.DARK + ";");
+                        "-fx-text-fill: " + ColorScheme.DARK + ";");
         
         ComboBox<String> periodCombo = createStyledComboBox();
         periodCombo.getItems().addAll("Aujourd'hui", "7 derniers jours", "30 derniers jours", "Tous");
@@ -921,7 +1175,7 @@ public class AgentDashboardController {
         VBox typeBox = new VBox(8);
         Label typeLabel = new Label("Type d'opération");
         typeLabel.setStyle("-fx-font-size: 13px; -fx-font-weight: 600; -fx-font-family: 'Inter'; " +
-                         "-fx-text-fill: " + ColorScheme.DARK + ";");
+                        "-fx-text-fill: " + ColorScheme.DARK + ";");
         
         ComboBox<String> typeCombo = createStyledComboBox();
         typeCombo.getItems().addAll("Tous", "Dépôt", "Retrait");
@@ -933,7 +1187,7 @@ public class AgentDashboardController {
         VBox searchBox = new VBox(8);
         Label searchLabel = new Label("Recherche par client");
         searchLabel.setStyle("-fx-font-size: 13px; -fx-font-weight: 600; -fx-font-family: 'Inter'; " +
-                           "-fx-text-fill: " + ColorScheme.DARK + ";");
+                        "-fx-text-fill: " + ColorScheme.DARK + ";");
         
         TextField searchField = createStyledTextField("Email du client...");
         searchField.setPrefWidth(250);
@@ -956,15 +1210,15 @@ public class AgentDashboardController {
         TableView<Transaction> transactionsTable = new TableView<>();
         transactionsTable.setPrefHeight(400);
         transactionsTable.setStyle("-fx-background-color: " + ColorScheme.CARD_BG + "; " +
-                                 "-fx-border-color: " + ColorScheme.BORDER + "; " +
-                                 "-fx-border-radius: 10; -fx-background-radius: 10; " +
-                                 "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0.5, 0, 2);");
+                                "-fx-border-color: " + ColorScheme.BORDER + "; " +
+                                "-fx-border-radius: 10; -fx-background-radius: 10; " +
+                                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0.5, 0, 2);");
         transactionsTable.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
         
         String columnStyle = "-fx-alignment: CENTER-LEFT; -fx-padding: 12 15; -fx-font-family: 'Inter';";
         String headerStyle = "-fx-background-color: " + ColorScheme.GRADIENT_PRIMARY + "; " +
-                           "-fx-font-weight: bold; -fx-font-family: 'Inter'; " +
-                           "-fx-text-fill: white; -fx-border-color: transparent;";
+                        "-fx-font-weight: bold; -fx-font-family: 'Inter'; " +
+                        "-fx-text-fill: white; -fx-border-color: transparent;";
         
         // Configuration des colonnes
         TableColumn<Transaction, String> dateCol = new TableColumn<>("Date/Heure");
@@ -1086,7 +1340,42 @@ public class AgentDashboardController {
             return new javafx.beans.property.SimpleStringProperty(desc);
         });
         
-        transactionsTable.getColumns().addAll(dateCol, idCol, typeCol, clientCol, amountCol, commissionCol, descCol);
+        // COLONNE REÇU PDF (NOUVELLE)
+        TableColumn<Transaction, Void> receiptCol = new TableColumn<>("Reçu");
+        receiptCol.setPrefWidth(70);
+        receiptCol.setStyle(headerStyle);
+        receiptCol.setCellFactory(param -> new TableCell<Transaction, Void>() {
+            private final Button receiptBtn = new Button("📄");
+            
+            {
+                receiptBtn.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-size: 11px; -fx-padding: 4 8;");
+                receiptBtn.setOnAction(e -> {
+                    Transaction transaction = getTableView().getItems().get(getIndex());
+                    exportTransactionReceipt(transaction);
+                });
+                
+                receiptBtn.setOnMouseEntered(mouseEvent -> receiptBtn.setStyle(
+                    "-fx-background-color: #c0392b; -fx-text-fill: white; -fx-font-size: 11px; -fx-padding: 4 8; -fx-cursor: hand;"
+                ));
+                receiptBtn.setOnMouseExited(mouseEvent -> receiptBtn.setStyle(
+                    "-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-size: 11px; -fx-padding: 4 8;"
+                ));
+            }
+            
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setGraphic(null);
+                } else {
+                    HBox hbox = new HBox(receiptBtn);
+                    hbox.setAlignment(Pos.CENTER);
+                    setGraphic(hbox);
+                }
+            }
+        });
+        
+        transactionsTable.getColumns().addAll(dateCol, idCol, typeCol, clientCol, amountCol, commissionCol, descCol, receiptCol);
         
         // Info label avec style
         HBox infoBox = new HBox();
@@ -1094,9 +1383,9 @@ public class AgentDashboardController {
         
         Label infoLabel = new Label("Total affiché: 0 transactions - Montant total: 0 GNF");
         infoLabel.setStyle("-fx-font-weight: bold; -fx-font-family: 'Inter'; " +
-                          "-fx-text-fill: " + ColorScheme.DARK + "; -fx-font-size: 14px; " +
-                          "-fx-padding: 10 15; -fx-background-color: #f8fafc; " +
-                          "-fx-background-radius: 8; -fx-border-color: " + ColorScheme.BORDER + ";");
+                        "-fx-text-fill: " + ColorScheme.DARK + "; -fx-font-size: 14px; " +
+                        "-fx-padding: 10 15; -fx-background-color: #f8fafc; " +
+                        "-fx-background-radius: 8; -fx-border-color: " + ColorScheme.BORDER + ";");
         
         infoBox.getChildren().add(infoLabel);
         
@@ -1106,15 +1395,16 @@ public class AgentDashboardController {
         actionButtons.setPadding(new Insets(20, 0, 0, 0));
         
         Button refreshButton = createStyledButton("🔄 Actualiser", "primary");
-        Button exportButton = createStyledButton("📊 Exporter", "success");
-        Button printButton = createStyledButton("🖨️ Imprimer", "neutral");
-        
-        actionButtons.getChildren().addAll(refreshButton, exportButton, printButton);
+        Button exportButton = createStyledButton("📄 Exporter PDF", "danger");
         
         // Actions
         filterButton.setOnAction(e -> {
-            loadAgentTransactions(transactionsTable, infoLabel, periodCombo.getValue(), 
-                                typeCombo.getValue(), searchField.getText());
+            currentPeriodFilter = periodCombo.getValue();
+            currentTypeFilter = typeCombo.getValue();
+            currentSearchFilter = searchField.getText();
+            
+            loadAgentTransactions(transactionsTable, infoLabel, currentPeriodFilter, 
+                                currentTypeFilter, currentSearchFilter);
             updateAgentStatistics(todayBox, weekBox, monthBox, commissionBox);
         });
         
@@ -1122,23 +1412,28 @@ public class AgentDashboardController {
             periodCombo.setValue("Aujourd'hui");
             typeCombo.setValue("Tous");
             searchField.clear();
+            
+            currentPeriodFilter = "Aujourd'hui";
+            currentTypeFilter = "Tous";
+            currentSearchFilter = "";
+            
             loadAgentTransactions(transactionsTable, infoLabel, "Aujourd'hui", "Tous", "");
             updateAgentStatistics(todayBox, weekBox, monthBox, commissionBox);
         });
         
         refreshButton.setOnAction(e -> {
-            loadAgentTransactions(transactionsTable, infoLabel, periodCombo.getValue(), 
-                                typeCombo.getValue(), searchField.getText());
+            loadAgentTransactions(transactionsTable, infoLabel, currentPeriodFilter, 
+                                currentTypeFilter, currentSearchFilter);
             updateAgentStatistics(todayBox, weekBox, monthBox, commissionBox);
         });
         
-        exportButton.setOnAction(e -> {
-            showStyledAlert("Info", "Export Excel en développement", "info");
-        });
+        // Stocker la référence à la table actuelle
+        currentTransactionsTable = transactionsTable;
         
-        printButton.setOnAction(e -> {
-            showStyledAlert("Info", "Impression en développement", "info");
-        });
+        
+        exportButton.setOnAction(e -> handleExportPDF());
+        
+        actionButtons.getChildren().addAll(refreshButton, exportButton);
         
         // Assemblage
         operationsBox.getChildren().addAll(
@@ -1158,6 +1453,7 @@ public class AgentDashboardController {
         updateAgentStatistics(todayBox, weekBox, monthBox, commissionBox);
     }
     
+    @SuppressWarnings("unchecked")
     private void showCommissionsInterface() {
         System.out.println("[AGENT] Affichage interface commissions");
         mainContent.getChildren().clear();
@@ -1377,7 +1673,8 @@ public class AgentDashboardController {
         
         mainContent.getChildren().add(scrollPane);
     }
-    
+    @SuppressWarnings("unchecked")
+
     private void showProfileInterface() {
         Stage profileStage = new Stage();
         profileStage.setTitle("👤 Mon Profil");
@@ -1578,6 +1875,8 @@ public class AgentDashboardController {
         profileStage.showAndWait();
     }
     
+    @SuppressWarnings("unchecked")
+
     private void saveProfileChanges(String nouveauNom, String nouveauPrenom, 
                                   String nouveauTelephone, String nouvelleAdresse,
                                   String currentPassword, String newPassword, 
