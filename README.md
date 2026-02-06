@@ -94,35 +94,19 @@ Le système repose sur une **architecture client–serveur** :
 ## 🛠️ Technologies utilisées
 
 ### Backend
-- ☕ Java (Spring Boot)  
-- 🌐 Apache Tomcat  
+- ☕ Java 
+
 
 ### Frontend
-- 🌐 HTML  
-- 🎨 CSS  
-- ⚙️ JavaScript / JavaFX  
+- ⚙️ JavaFX  
 
 ### Base de données
 - 🗄️ MySQL  
 
 ### Sécurité
 - 🔐 Hashage des mots de passe  
-- 🔒 SSL / TLS  
+
 
 ### Outils
 - 🧰 Git & GitHub  
 
----
-
-## 📁 Structure du projet
-
-
-e-wallet-system/
-│
-├── backend/        # API backend Java (Spring Boot)
-├── frontend/       # Interface utilisateur
-├── database/       # Scripts SQL, MCD, MLD
-├── docs/           # Cahier des charges, diagrammes UML
-│
-├── README.md
-└── .gitignore
